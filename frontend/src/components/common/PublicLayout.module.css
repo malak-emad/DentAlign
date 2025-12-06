@@ -1,0 +1,26 @@
+/* Container must fill the entire viewport */
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: var(--bg); /* Assuming --bg is white from global.css */
+}
+
+/* * The main content area must take up all remaining vertical space. 
+ * We use margin-top to offset the space taken by the fixed/sticky navbar.
+ * Since the Navbar is not explicitly fixed/absolute, we need to rely on 
+ * its natural flow, but often, the most robust way to handle a fixed-height 
+ * header is to size the content based on the viewport height (100vh) 
+ * minus the height of the header.
+ */
+.mainContent {
+  /* Let the content flex and fill available space */
+  flex-grow: 1; 
+  /* * A fixed value (like 70px) is used here to match the height 
+   * of the Navbar defined in Navbar.module.css (padding: 14px top/bottom, 
+   * plus some implicit height from content/font size = approx 70px).
+   * * We will ensure the Login page content is the one that fills the screen 
+   * below the Navbar, so we remove the original min-height logic from Login.module.css.
+   */
+}

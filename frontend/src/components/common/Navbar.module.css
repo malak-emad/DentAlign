@@ -1,0 +1,67 @@
+.navbar {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 40px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0A345C;
+}
+
+.menu {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.menu li a {
+  text-decoration: none;
+  font-size: 16px;
+  color: #0A345C;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.menu li a:hover {
+  color: #E3C7A1;
+}
+
+.contactBtn {
+  background: #E3C7A1;
+  padding: 12px 22px;
+  border-radius: 6px;
+}
+
+.contactBtn a {
+  text-decoration: none;
+  font-size: 16px;
+  color: #0A345C;
+  font-weight: 700;
+}
+
+.contactBtn:hover {
+  background: #0A345C;
+}
+
+.contactBtn:hover a {
+  color: #ffffff;
+}

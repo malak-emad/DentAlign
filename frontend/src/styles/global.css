@@ -1,0 +1,24 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  color: #212121;
+}
+
+/* CSS Variables */
+:root {
+  --bg: #ffffff;
+  --card: #ffffff;
+  --accent: #E3C7A1;
+  --accent-strong: #0A345C;
+  --muted: #E5E7EB;
+  --text: #212121;
+}
