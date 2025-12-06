@@ -1,0 +1,63 @@
+/* Whole page container */
+.container {
+  width: 100%;
+  height: 89.5vh;      /* full screen */
+  overflow: hidden;   /* no scroll */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top header with info */
+.headerSection {
+  width: 100%;
+  height: 300px;
+  background: #f0f0f0;
+  display: flex;
+  flex-direction: column;     /* stack text vertically */
+  justify-content: center;
+  align-items: flex-start;     /* left side */
+  padding-left: 200px;
+  gap: 10px;
+}
+
+.headerSection h1 {
+  color: #E3C7A1;
+  font-size: 48px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.headerSection p {
+  color: #473d3d;
+  font-size: 20px;
+  margin: 0;
+}
+
+.middleSection {
+  width: 100%;
+  height: 200px;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #0A345C;
+}
+
+/* Bottom blue section */
+.bottomSection {
+  width: 100%;
+  max-height: 300px;
+  flex-grow: 1;       /*fill remaining space so page fits exactly*/
+  background: #0A345C;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+}
+
+.bottomSection p {
+  color: #ffffff;
+  font-size: 20px;
+  margin: 0;
+}

@@ -36,6 +36,7 @@
   list-style: none;
   display: flex;
   align-items: center;
+  margin: 0 auto;
   gap: 28px;
 }
 
@@ -70,4 +71,20 @@
 
 .contactBtn:hover a {
   color: #ffffff;
+}
+
+.active {
+  color: #E3C7A1 !important;   
+}
+
+.active {
+  font-weight: 700;
+}
+
+.activeContactWrapper {
+  background: #0A345C !important; 
+}
+
+.activeBtn {
+  color: #ffffff !important;
 }

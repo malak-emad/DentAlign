@@ -4,33 +4,65 @@ import styles from "./Navbar.module.css";
 import logo from "../../assets/logos/medical-logo.png";
 
 export default function Navbar() {
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const { pathname } = useLocation();
 
   return (
     <nav className={styles.navbar}>
+      
       <div className={styles.left}>
         <img src={logo} alt="Clinic Logo" className={styles.logo} />
         <span className={styles.brand}>DentAlign</span>
       </div>
 
       <ul className={styles.menu}>
-        <li><Link to="/">Home</Link></li>
-        <li><a href="#">Doctors</a></li>
+        <li>
+          <Link
+            to="/"
+            className={pathname === "/" ? styles.active : ""}
+          >
+            Home
+          </Link>
+        </li>
 
-        {/* Hide SignUp ONLY when on /signup */}
-        {currentPath !== "/signup" && (
-          <li><Link to="/signup">SignUp</Link></li>
-        )}
+        <li>
+          <a
+            href="#"
+            className={pathname === "/doctors" ? styles.active : ""}
+          >
+            Doctors
+          </a>
+        </li>
 
-        {/* Hide Login ONLY when on /login */}
-        {currentPath !== "/login" && (
-          <li><Link to="/login">LogIn</Link></li>
-        )}
+        <li>
+          <Link
+            to="/signup"
+            className={pathname === "/signup" ? styles.active : ""}
+          >
+            SignUp
+          </Link>
+        </li>
+
+        <li>
+          <Link
+            to="/login"
+            className={pathname === "/login" ? styles.active : ""}
+          >
+            LogIn
+          </Link>
+        </li>
       </ul>
 
-      <div className={styles.contactBtn}>
-        <a href="#">Contact us</a>
+      <div
+        className={`${styles.contactBtn} ${
+          pathname === "/contact" ? styles.activeContactWrapper : ""
+        }`}
+      >
+        <Link
+          to="/contact"
+          className={pathname === "/contact" ? styles.activeBtn : ""}
+        >
+          Contact us
+        </Link>
       </div>
     </nav>
   );
