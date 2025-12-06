@@ -1,22 +1,19 @@
 import React from 'react';
+import PublicLayout from '../components/common/PublicLayout';
+
 import Login from '../features/auth/pages/Login';
-import PublicLayout from '../components/common/PublicLayout'; // 👈 Import Layout
 import Signup from '../features/auth/pages/Signup';
+import Home from '../features/home/pages/Home';     // 👈 add this
 
 const routes = [
   {
     path: '/',
-    element: <PublicLayout><Login /></PublicLayout>, // Wrapped in Layout
+    element: <PublicLayout><Home /></PublicLayout>,   // 👈 Home is now the homepage
   },
   {
     path: '/login',
-    element: <PublicLayout><Login /></PublicLayout>, // Wrapped in Layout
+    element: <PublicLayout><Login /></PublicLayout>,
   },
-  // Add other routes as you create pages
-  // {
-  //   path: '/dashboard',
-  //   element: <Dashboard />,
-  // },
   {
     path: '/signup', 
     element: <PublicLayout><Signup /></PublicLayout>,
