@@ -1,6 +1,7 @@
 import React from 'react';
 import Login from '../features/auth/pages/Login';
 import PublicLayout from '../components/common/PublicLayout'; // 👈 Import Layout
+import Signup from '../features/auth/pages/Signup';
 
 const routes = [
   {
@@ -16,6 +17,10 @@ const routes = [
   //   path: '/dashboard',
   //   element: <Dashboard />,
   // },
+  {
+    path: '/signup', 
+    element: <PublicLayout><Signup /></PublicLayout>,
+  },
 ];
 
 export default routes;

@@ -24,14 +24,14 @@ export default function Login() {
         <div className={styles.card}>
           <h1 className={styles['card-title']}>Login</h1>
 
-          <div className={styles.avatar}>
+          {/* <div className={styles.avatar}>
             <div className={styles['avatar-circle']}>
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="8" r="3" stroke="#2f2f2f" strokeWidth="1.2" />
                 <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="#2f2f2f" strokeWidth="1.2" fill="none"/>
               </svg>
             </div>
-          </div>
+          </div> */}
 
           <form className={styles['login-form']} onSubmit={handleSubmit}>
             <label className={styles['field-label']}>{role} ID</label>
@@ -56,7 +56,7 @@ export default function Login() {
             <button type="submit" className={styles['submit-btn']}>Submit</button>
 
             <div className={styles['signup-link']}>
-              Don't have an account? <a href="#">Sign Up!</a>
+              Don't have an account? <a href="/signup">Sign Up!</a>
             </div>
           </form>
         </div>
