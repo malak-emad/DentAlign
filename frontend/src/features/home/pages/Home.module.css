@@ -222,7 +222,7 @@
 }
 
 /* small icon placeholder (you will replace with real icons) */
-.iconPlaceholder {
+/* .iconPlaceholder {
   font-size: 36px;
   width: 56px;
   height: 56px;
@@ -233,7 +233,25 @@
   border-radius: 12px;
   background: rgba(227,199,161,0.14);
   color: var(--accent-strong);
+} */
+
+.iconPlaceholder {
+  width: 60px;   /* Adjust as needed */
+  height: 60px;  /* Adjust as needed */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  margin-left: 105px;
+
 }
+
+.iconPlaceholder img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 1200px) {

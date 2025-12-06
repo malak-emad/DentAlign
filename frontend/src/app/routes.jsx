@@ -3,12 +3,12 @@ import PublicLayout from '../components/common/PublicLayout';
 
 import Login from '../features/auth/pages/Login';
 import Signup from '../features/auth/pages/Signup';
-import Home from '../features/home/pages/Home';     // 👈 add this
+import Home from '../features/home/pages/Home';     
 
 const routes = [
   {
     path: '/',
-    element: <PublicLayout><Home /></PublicLayout>,   // 👈 Home is now the homepage
+    element: <PublicLayout><Home /></PublicLayout>,   
   },
   {
     path: '/login',

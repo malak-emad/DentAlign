@@ -9,6 +9,11 @@ import clinic1 from "../../../assets/images/clinic1.jpg";
 import clinic2 from "../../../assets/images/clinic2.jpg";
 import clinic3 from "../../../assets/images/clinic3.jpg";
 
+import braceIcon from "../../../assets/icons/braces.png";
+import cosmeticIcon from "../../../assets/icons/cosmetic.png";
+import implantIcon from "../../../assets/icons/implants.png";
+
+
 export default function Home() {
   const sliderImages = [slider1, slider2, slider3];
   const sliderTexts = [
@@ -127,22 +132,29 @@ export default function Home() {
         <h3>Our Specialties</h3>
         <div className={styles.specGrid}>
           <div className={styles.specCard}>
-            <div className={styles.iconPlaceholder}>🦷</div>
-            <h4>Orthodontics (Braces)</h4>
+            <div className={styles.iconPlaceholder}>
+              <img src={braceIcon} alt="Orthodontics" />
+            </div>
+            <h4>Orthodontics</h4>
             <p>Comprehensive treatments for straighter teeth and improved bite.</p>
           </div>
 
           <div className={styles.specCard}>
-            <div className={styles.iconPlaceholder}>✨</div>
+            <div className={styles.iconPlaceholder}>
+              <img src={cosmeticIcon} alt="Cosmetic Dentistry" />
+            </div>
             <h4>Cosmetic Dentistry</h4>
             <p>Veneers, whitening and smile design to enhance aesthetics.</p>
           </div>
 
           <div className={styles.specCard}>
-            <div className={styles.iconPlaceholder}>🔩</div>
+            <div className={styles.iconPlaceholder}>
+              <img src={implantIcon} alt="Dental Implants" />
+            </div>
             <h4>Dental Implants</h4>
             <p>Long-lasting implant solutions to replace missing teeth.</p>
           </div>
+
         </div>
       </section>
     </div>
