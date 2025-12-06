@@ -90,21 +90,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ABOUT + CLINIC GALLERY (Option A layout) */}
+      {/* ABOUT + CLINIC GALLERY */}
       <section className={styles.aboutSection}>
         <div className={styles.aboutLeft}>
           <h2>About DentAlign Clinic</h2>
           <p className={styles.aboutText}>
-            DentAlign Clinic delivers modern dental care combining clinical
-            excellence, evidence-based procedures and a patient-centered
-            approach. We focus on long-term oral health and functional,
-            esthetic results by using advanced technology and a highly trained
-            professional team who treat every patient with respect and empathy.
-          </p>
-          <p className={styles.aboutTextSmall}>
-            Our services range from preventive care and orthodontics to implants,
-            cosmetic dentistry and restorative treatments — all tailored to your
-            needs.
+            DentAlign Clinic delivers modern dental care combining clinical 
+            excellence, evidence-based procedures and a patient-centered 
+            approach. We focus on long-term oral health and functional, 
+            esthetic results by using advanced technology and a highly 
+            trained professional team who treat every patient with respect 
+            and empathy. Our services range from preventive care and orthodontics 
+            to implants, cosmetic dentistry and restorative treatments — all tailored to your needs.
+            We strive to make every visit comfortable and stress-free, 
+            ensuring that patients feel supported from consultation to treatment. 
+            Our team listens carefully to your concerns and designs personalized 
+            care plans that prioritize your comfort, safety, and long-term results. 
+            At DentAlign, your smile, confidence, and well-being always come first.
           </p>
         </div>
 

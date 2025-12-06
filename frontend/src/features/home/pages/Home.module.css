@@ -29,7 +29,7 @@
   right: 50%;
   margin-left: -50vw; /* full bleed trick */
   margin-right: -50vw;
-  height: 70vh;
+  height: 80vh;
   overflow: hidden;
   background: #000; /* fallback while image loads */
 }
@@ -100,12 +100,13 @@
 .left { left: clamp(8px, 2.5vw, 28px); }
 .right { right: clamp(8px, 2.5vw, 28px); }
 
-/* ---------------- ABOUT + CLINIC GALLERY (Option A) --------------- */
+/* ---------------- ABOUT + CLINIC GALLERY  --------------- */
 /* keep content centered but allow images to fill available space to avoid white gap */
 .aboutSection {
   width: 100%;
   max-width: 1200px;
   margin: 32px auto 0; /* moved a bit lower: 32px top margin */
+  /* margin-top: 60px; */
   display: grid;
   /* left flexible text, right gallery flexible but large */
   grid-template-columns: minmax(320px, 1fr) minmax(340px, 560px);
@@ -130,10 +131,10 @@
   color: #444;
   margin-bottom: 12px;
 }
-.aboutTextSmall {
+/* .aboutTextSmall {
   color: #666;
   font-size: 15px;
-}
+} */
 
 /* right gallery: big image and two small images below */
 .aboutRight {
@@ -145,7 +146,7 @@
 /* big image on top */
 .bigImageWrap {
   width: 100%;
-  height: 320px;
+  height: 280px;
   overflow: hidden;
   border-radius: 10px;
 }
@@ -179,6 +180,7 @@
   text-align: center;
   font-size: 28px;
   color: var(--accent-strong);
+  margin-top: 20px;
   margin-bottom: 20px;
   font-weight: 800;
 }
