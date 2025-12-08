@@ -1,24 +1,23 @@
 import React, { useState } from 'react';
 import InputField from '../../../components/ui/Input';
-import styles from './Signup.module.css'; 
+import styles from './Signup.module.css'; // Reuse same styles
 
-// Import our API function
-import { signupPatient } from '../api/authApi';
+// Import the API function for doctor signup
+import { signupDoctor } from '../api/authApi';
 
 // Import the same illustration image
 import loginImg from '../../../assets/images/signup.png'
 
-export default function Signup() {
-  // State for form fields
+export default function DoctorSignup() {
+  // State for doctor-specific fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  
-  // State for UI feedback
+  const [medicalLicenseNumber, setMedicalLicenseNumber] = useState("");
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);  // NEW: Loading state
-  const [successMessage, setSuccessMessage] = useState('');  // NEW: Success message
+  const [isLoading, setIsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   function validateForm() {
     const newErrors = {};
@@ -28,12 +27,12 @@ export default function Signup() {
     if (!password) newErrors.password = "Password is required";
     if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
     if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
+    if (!medicalLicenseNumber.trim()) newErrors.medicalLicenseNumber = "Medical license number is required";
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   }
 
-  // NEW: Async function to handle API calls
   async function handleSubmit(e) {
     e.preventDefault();
     
@@ -49,49 +48,45 @@ export default function Signup() {
     
     try {
       // Prepare data for API (match Django field names)
-      const patientData = {
+      const doctorData = {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         password: password,
-        confirm_password: confirmPassword
+        confirm_password: confirmPassword,
+        medical_license_number: medicalLicenseNumber.trim()
       };
       
-      console.log('📤 Sending patient data:', patientData);
+      console.log('📤 Sending doctor data:', doctorData);
       
       // Call our API
-      const result = await signupPatient(patientData);
+      const result = await signupDoctor(doctorData);
       
       if (result.success) {
-        // Success! Show success message
-        setSuccessMessage('Account created successfully! You can now log in.');
+        // Success! Show custom success message for doctors
+        setSuccessMessage('Registration successful, pending verification');
         
         // Clear the form
         setName('');
         setEmail('');
         setPassword('');
         setConfirmPassword('');
+        setMedicalLicenseNumber('');
         
-        // Optional: Redirect to login page after 2 seconds
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 2000);
-        
+        console.log('✅ Doctor registration successful:', result.data);
       } else {
         // Handle API errors
-        if (result.error.details) {
-          // Django validation errors
-          setErrors(result.error.details);
+        if (result.data && typeof result.data === 'object') {
+          setErrors(result.data);
         } else {
-          // General error
-          setErrors({ general: result.error.error || 'Registration failed. Please try again.' });
+          setErrors({ general: result.error || 'Registration failed. Please try again.' });
         }
+        console.error('❌ Doctor registration failed:', result);
       }
-      
     } catch (error) {
-      console.error('🔥 Unexpected error:', error);
-      setErrors({ general: 'Something went wrong. Please try again.' });
+      console.error('💥 Doctor registration error:', error);
+      setErrors({ general: 'Network error. Please check your connection and try again.' });
     } finally {
-      // Always stop loading
+      // Always clear loading state
       setIsLoading(false);
     }
   }
@@ -105,18 +100,11 @@ export default function Signup() {
 
       <div className={styles['right-panel']}>
         <div className={styles.card}>
-          {/* Changed Title */}
-          <h1 className={styles['card-title']}>Sign up</h1>
-
-          {/* Avatar - Same as Login
-          <div className={styles.avatar}>
-            <div className={styles['avatar-circle']}>
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="3" stroke="#2f2f2f" strokeWidth="1.2" />
-                <path d="M4 20c0-4 4-6 8-6s8 2 8 6" stroke="#2f2f2f" strokeWidth="1.2" fill="none"/>
-              </svg>
-            </div>
-          </div> */}
+          {/* Doctor-specific Title */}
+          <h1 className={styles['card-title']}>Doctor Registration</h1>
+          <p style={{color: '#666', marginBottom: '24px', textAlign: 'center', fontSize: '14px'}}>
+            Registration requires admin verification
+          </p>
 
           <form className={styles['login-form']} onSubmit={handleSubmit}>
             {/* Name Field */}
@@ -137,6 +125,15 @@ export default function Signup() {
               placeholder="Enter your email"
             />
             {errors.email && <span className={styles.error}>{errors.email}</span>}
+
+            {/* Medical License Number Field */}
+            <label className={styles['field-label']}>Medical License Number</label>
+            <InputField
+              value={medicalLicenseNumber}
+              onChange={(v) => setMedicalLicenseNumber(v)}
+              placeholder="Enter your medical license number"
+            />
+            {errors.medicalLicenseNumber && <span className={styles.error}>{errors.medicalLicenseNumber}</span>}
 
             {/* Password Field */}
             <label className={styles['field-label']}>Password</label>
@@ -176,18 +173,21 @@ export default function Signup() {
             <button 
               type="submit" 
               className={styles['submit-btn']}
-              disabled={isLoading}  /* Disable button while loading */
+              disabled={isLoading}
               style={{ 
                 opacity: isLoading ? 0.6 : 1,
                 cursor: isLoading ? 'not-allowed' : 'pointer'
               }}
             >
-              {isLoading ? 'Creating Account...' : 'Sign up'}
+              {isLoading ? 'Creating Account...' : 'Register as Doctor'}
             </button>
 
-            {/* Changed link text and target */}
+            {/* Links */}
             <div className={styles['signup-link']}>
               Already have an account? <a href="/login">Sign In!</a>
+            </div>
+            <div className={styles['signup-link']}>
+              Patient registration? <a href="/signup">Sign up as Patient!</a>
             </div>
           </form>
         </div>
