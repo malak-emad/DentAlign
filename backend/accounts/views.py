@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db import transaction
 from .models import Role, User
-from .serializers import RoleSerializer, UserSerializer, PatientSignupSerializer, DoctorSignupSerializer, LoginSerializer
+from .serializers import RoleSerializer, UserSerializer, PatientSignupSerializer, DoctorSignupSerializer, NurseSignupSerializer, LoginSerializer
 
 
 class RoleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -79,6 +79,41 @@ def doctor_signup(request):
                 
                 return Response({
                     'message': 'Doctor registration submitted successfully. Your account is pending admin verification.',
+                    'user': user_data,
+                    'status': 'pending_verification'
+                }, status=status.HTTP_201_CREATED)
+                
+        except Exception as e:
+            return Response({
+                'error': 'Failed to create account',
+                'details': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    return Response({
+        'error': 'Invalid data',
+        'details': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def nurse_signup(request):
+    """
+    API endpoint for nurse registration
+    POST /api/auth/signup/nurse/
+    """
+    serializer = NurseSignupSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        try:
+            with transaction.atomic():  # Ensure data consistency
+                user = serializer.save()
+                
+                # Return user data (without sensitive info)
+                user_data = UserSerializer(user).data
+                
+                return Response({
+                    'message': 'Nurse registration submitted successfully. Your account is pending admin verification.',
                     'user': user_data,
                     'status': 'pending_verification'
                 }, status=status.HTTP_201_CREATED)

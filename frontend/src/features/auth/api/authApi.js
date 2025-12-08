@@ -91,6 +91,23 @@ export async function signupDoctor(doctorData) {
 }
 
 /**
+ * Register a new nurse
+ * @param {object} nurseData - Nurse registration data  
+ * @param {string} nurseData.name - Full name
+ * @param {string} nurseData.email - Email address
+ * @param {string} nurseData.password - Password
+ * @param {string} nurseData.confirm_password - Password confirmation
+ * @param {string} nurseData.nursing_license_number - Nursing license number (optional)
+ * @returns {Promise} - API response
+ */
+export async function signupNurse(nurseData) {
+  return makeApiRequest('/auth/signup/nurse/', {
+    method: 'POST', 
+    body: JSON.stringify(nurseData)
+  });
+}
+
+/**
  * User login with role-based authentication
  * @param {object} loginData - Login credentials
  * @param {string} loginData.email - User email address

@@ -85,6 +85,18 @@ export default function Login() {
             setErrors({ general: 'Account is not verified yet. Please contact administration.' });
             return;
           }
+        } else if (userRole === 'Nurse') {
+          // Nurse: Check verification status
+          if (user.is_verified) {
+            setSuccessMessage(`Welcome back, Nurse ${user.full_name}! Redirecting...`);
+            setTimeout(() => {
+              navigate('/');
+            }, 2000);
+          } else {
+            // This shouldn't happen due to backend validation, but just in case
+            setErrors({ general: 'Account is not verified yet. Please contact administration.' });
+            return;
+          }
         } else if (userRole === 'Patient' || userRole === 'Admin') {
           // Patient or Admin: Redirect to homepage
           const roleTitle = userRole === 'Admin' ? 'Admin' : '';

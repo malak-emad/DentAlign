@@ -13,6 +13,7 @@ urlpatterns = [
     # Authentication endpoints
     path('api/auth/signup/', views.patient_signup, name='patient-signup'),
     path('api/auth/signup/doctor/', views.doctor_signup, name='doctor-signup'),
+    path('api/auth/signup/nurse/', views.nurse_signup, name='nurse-signup'),
     path('api/auth/login/', views.login, name='login'),
     
     # Health check

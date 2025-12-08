@@ -104,6 +104,47 @@ class DoctorSignupSerializer(serializers.Serializer):
         return user
 
 
+class NurseSignupSerializer(serializers.Serializer):
+    """Serializer for nurse registration"""
+    name = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    password = serializers.CharField(min_length=6, write_only=True)
+    confirm_password = serializers.CharField(write_only=True)
+    nursing_license_number = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    
+    def validate(self, data):
+        """Validate password confirmation"""
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords do not match")
+        return data
+    
+    def validate_email(self, value):
+        """Check if email already exists"""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("User with this email already exists")
+        return value
+    
+    def create(self, validated_data):
+        """Create a new nurse user"""
+        # Get or create Nurse role
+        nurse_role, created = Role.objects.get_or_create(
+            name='Nurse',
+            defaults={'description': 'Licensed nursing professional'}
+        )
+        
+        # Create user
+        user = User.objects.create(
+            full_name=validated_data['name'],
+            email=validated_data['email'],
+            username=validated_data['email'],  # Use email as username for now
+            password_hash=make_password(validated_data['password']),
+            medical_license_number=validated_data.get('nursing_license_number', ''),
+            role=nurse_role,
+            is_verified=False  # Nurses need admin verification
+        )
+        return user
+
+
 class LoginSerializer(serializers.Serializer):
     """Serializer for user login with role-based authentication"""
     email = serializers.EmailField()
@@ -128,11 +169,12 @@ class LoginSerializer(serializers.Serializer):
                 'password': 'Invalid password'
             })
         
-        # Special case for doctors: Check verification status
-        if user.role and user.role.name == 'Doctor':
+        # Special case for doctors and nurses: Check verification status
+        if user.role and user.role.name in ['Doctor', 'Nurse']:
             if not user.is_verified:
+                role_name = user.role.name.lower()
                 raise serializers.ValidationError({
-                    'verification': 'Account is not verified yet. Please contact administration.'
+                    'verification': f'Account is not verified yet. Please contact administration.'
                 })
         
         # Return user data if all checks pass

@@ -4,6 +4,7 @@ import PublicLayout from '../components/common/PublicLayout';
 import Login from '../features/auth/pages/Login';
 import Signup from '../features/auth/pages/Signup';
 import DoctorSignup from '../features/auth/pages/DoctorSignup';
+import NurseSignup from '../features/auth/pages/NurseSignup';
 import Home from '../features/home/pages/Home';     
 import Contact from "../features/contact/pages/Contact";
 
@@ -23,6 +24,10 @@ const routes = [
   {
     path: '/signup/doctor', 
     element: <PublicLayout><DoctorSignup /></PublicLayout>,
+  },
+  {
+    path: '/signup/nurse', 
+    element: <PublicLayout><NurseSignup /></PublicLayout>,
   },
   {
   path: "/contact",
