@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from .models import Role, User
 
 
@@ -102,3 +102,39 @@ class DoctorSignupSerializer(serializers.Serializer):
             is_verified=False  # Doctors need admin verification
         )
         return user
+
+
+class LoginSerializer(serializers.Serializer):
+    """Serializer for user login with role-based authentication"""
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    
+    def validate(self, data):
+        """Authenticate user and return user data with role info"""
+        email = data['email'].lower()
+        password = data['password']
+        
+        try:
+            # Find user by email
+            user = User.objects.select_related('role').get(email=email)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({
+                'email': 'Account does not exist'
+            })
+        
+        # Check password
+        if not check_password(password, user.password_hash):
+            raise serializers.ValidationError({
+                'password': 'Invalid password'
+            })
+        
+        # Special case for doctors: Check verification status
+        if user.role and user.role.name == 'Doctor':
+            if not user.is_verified:
+                raise serializers.ValidationError({
+                    'verification': 'Account is not verified yet. Please contact administration.'
+                })
+        
+        # Return user data if all checks pass
+        data['user'] = user
+        return data

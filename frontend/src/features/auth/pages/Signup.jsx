@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import InputField from '../../../components/ui/Input';
 import styles from './Signup.module.css'; 
 
@@ -9,6 +10,8 @@ import { signupPatient } from '../api/authApi';
 import loginImg from '../../../assets/images/signup.png'
 
 export default function Signup() {
+  const navigate = useNavigate();
+  
   // State for form fields
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,8 +65,8 @@ export default function Signup() {
       const result = await signupPatient(patientData);
       
       if (result.success) {
-        // Success! Show success message
-        setSuccessMessage('Account created successfully! You can now log in.');
+        // Success! Show success message and redirect to homepage
+        setSuccessMessage('Account created successfully! Redirecting to homepage...');
         
         // Clear the form
         setName('');
@@ -71,9 +74,11 @@ export default function Signup() {
         setPassword('');
         setConfirmPassword('');
         
-        // Optional: Redirect to login page after 2 seconds
+        console.log('✅ Patient account created, redirecting to homepage');
+        
+        // Redirect to homepage after 2 seconds
         setTimeout(() => {
-          window.location.href = '/login';
+          navigate('/');
         }, 2000);
         
       } else {

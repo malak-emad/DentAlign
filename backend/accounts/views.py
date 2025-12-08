@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db import transaction
 from .models import Role, User
-from .serializers import RoleSerializer, UserSerializer, PatientSignupSerializer, DoctorSignupSerializer
+from .serializers import RoleSerializer, UserSerializer, PatientSignupSerializer, DoctorSignupSerializer, LoginSerializer
 
 
 class RoleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -32,12 +32,13 @@ def patient_signup(request):
     API endpoint for patient registration
     POST /api/auth/signup/
     """
+    # acts as a DTO (Data Transfer Object) to convert and validate incoming data
     serializer = PatientSignupSerializer(data=request.data)
     
     if serializer.is_valid():
         try:
             with transaction.atomic():  # Ensure data consistency
-                user = serializer.save()
+                user = serializer.save() # Create patient user
                 
                 # Return user data (without sensitive info)
                 user_data = UserSerializer(user).data
@@ -91,6 +92,66 @@ def doctor_signup(request):
     return Response({
         'error': 'Invalid data',
         'details': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login(request):
+    """
+    API endpoint for user login with role-based authentication
+    POST /api/auth/login/
+    
+    Handles different user types:
+    - Patient/Admin: Simple success/fail
+    - Doctor: Checks verification status
+    - Non-existent users: Returns "Account does not exist"
+    """
+    serializer = LoginSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        user = serializer.validated_data['user']
+        
+        # Prepare user response data
+        user_data = {
+            'user_id': str(user.user_id),
+            'email': user.email,
+            'full_name': user.full_name,
+            'role': user.role.name if user.role else None,
+            'is_verified': user.is_verified
+        }
+        
+        return Response({
+            'message': 'Login successful',
+            'user': user_data,
+            'success': True
+        }, status=status.HTTP_200_OK)
+    
+    # Handle different types of validation errors
+    errors = serializer.errors
+    
+    if 'email' in errors:
+        return Response({
+            'error': 'Account does not exist',
+            'success': False
+        }, status=status.HTTP_404_NOT_FOUND)
+    
+    if 'verification' in errors:
+        return Response({
+            'error': errors['verification'][0],
+            'success': False,
+            'verification_required': True
+        }, status=status.HTTP_403_FORBIDDEN)
+    
+    if 'password' in errors:
+        return Response({
+            'error': 'Invalid password',
+            'success': False
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    
+    return Response({
+        'error': 'Invalid credentials',
+        'success': False
     }, status=status.HTTP_400_BAD_REQUEST)
 
 

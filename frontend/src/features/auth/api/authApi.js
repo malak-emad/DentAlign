@@ -91,6 +91,20 @@ export async function signupDoctor(doctorData) {
 }
 
 /**
+ * User login with role-based authentication
+ * @param {object} loginData - Login credentials
+ * @param {string} loginData.email - User email address
+ * @param {string} loginData.password - User password
+ * @returns {Promise} - API response with user data and role information
+ */
+export async function login(loginData) {
+  return makeApiRequest('/auth/login/', {
+    method: 'POST',
+    body: JSON.stringify(loginData)
+  });
+}
+
+/**
  * Check API health
  * @returns {Promise} - API health status
  */

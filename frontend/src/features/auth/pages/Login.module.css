@@ -155,3 +155,26 @@
     padding: 40px 20px;
   }
 }
+
+/* Error and Success Message Styles */
+.error {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  display: block;
+  font-weight: 500;
+}
+
+.success {
+  color: #27ae60;
+  font-size: 0.875rem;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  display: block;
+  font-weight: 500;
+  background: #d5f4e6;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #a3e9c3;
+}
