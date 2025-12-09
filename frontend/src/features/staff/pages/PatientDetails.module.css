@@ -1,0 +1,122 @@
+/* MAIN CONTAINER */
+.container {
+  padding: 32px;
+  max-width: 1200px;
+  margin: auto;
+  font-family: Inter, Arial, sans-serif;
+}
+
+
+/* ===========================
+   HEADER (Patient Info Card)
+   =========================== */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+  border: 1px solid #f2f2f2;
+  transition: 0.3s ease;
+}
+
+.header:hover {
+  box-shadow: 0 6px 14px rgba(0,0,0,0.10);
+}
+
+.backBtn {
+  text-decoration: none;
+  margin-right: 4px;
+  font-size: 22px;
+  color: #0A345C;
+  font-weight: 700;
+  transition: 0.2s;
+}
+
+.backBtn:hover {
+  color: #08243e;
+}
+
+.image {
+  width: 115px;
+  height: 115px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #0A345C;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+}
+
+.info h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #0A345C;
+}
+
+.history {
+  margin-top: 8px;
+  font-size: 15px;
+  color: #666;
+  background: #f8fafc;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+}
+
+
+/* ===========================
+   TABS
+   =========================== */
+.tabs {
+  margin-top: 28px;
+  display: flex;
+  gap: 16px;
+}
+
+.tabs button {
+  padding: 12px 22px;
+  background: #f5f6f7;
+  border-radius: 10px;
+  border: 1px solid #e2e3e5;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: #444;
+  transition: all 0.25s ease;
+  letter-spacing: 0.3px;
+}
+
+.tabs button:hover {
+  background: #e9ecef;
+  color: #0A345C;
+  border-color: #d0d0d0;
+}
+
+.tabs .active {
+  background: #0A345C;
+  color: #ffffff;
+  border-color: #0A345C;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transform: translateY(-1px);
+}
+
+
+/* ===========================
+   CONTENT SECTION
+   =========================== */
+.content {
+  margin-top: 30px;
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  border: 1px solid #f1f1f1;
+  min-height: 200px;
+  transition: 0.25s ease;
+}
+
+.content:hover {
+  box-shadow: 0 5px 14px rgba(0,0,0,0.12);
+}

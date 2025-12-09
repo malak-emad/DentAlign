@@ -1,0 +1,93 @@
+/* =========================================================
+   CONTAINER + PAGE TITLE
+   ========================================================= */
+
+.container {
+  padding: 32px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0A345C;
+  margin-bottom: 28px;
+  letter-spacing: 0.4px;
+}
+
+/* =========================================================
+   GRID SYSTEM
+   ========================================================= */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+/* =========================================================
+   CARD STYLING
+   ========================================================= */
+
+.card {
+  background: #ffffff;
+  
+  padding: 22px 18px;
+  border-radius: 14px;
+
+  text-align: center;
+  text-decoration: none;
+  color: #1a1a1a;
+
+  box-shadow: 
+    0 2px 4px rgba(0,0,0,0.06),
+    0 4px 12px rgba(0,0,0,0.04);
+
+  transition: all 0.28s ease;
+  border: 1px solid #edf0f3;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 
+    0 6px 16px rgba(0,0,0,0.10),
+    0 8px 22px rgba(0,0,0,0.06);
+
+  border-color: #d0d7de;
+}
+
+/* =========================================================
+   IMAGE INSIDE CARD
+   ========================================================= */
+
+.image {
+  width: 100px;
+  height: 100px;
+
+  border-radius: 50%;
+  object-fit: cover;
+
+  margin-bottom: 14px;
+
+  box-shadow: 
+    0 3px 8px rgba(0,0,0,0.12);
+}
+
+/* =========================================================
+   TEXT INSIDE CARD
+   ========================================================= */
+
+.card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0A345C;
+  margin: 10px 0 6px;
+}
+
+.card p {
+  font-size: 14px;
+  color: #6c757d;
+  margin: 0;
+}
+

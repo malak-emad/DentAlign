@@ -1,0 +1,117 @@
+/* -------------------------------------------
+   GLOBAL CONTAINER
+------------------------------------------- */
+.container {
+  width: 100%;
+  padding: 10px 0;
+  font-family: "Inter", sans-serif;
+}
+
+/* -------------------------------------------
+   TOP SUMMARY CARDS
+------------------------------------------- */
+.cards {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1;
+  min-width: 240px;
+  background: #ffffff;
+  padding: 26px;
+  border-radius: 14px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+.card h2 {
+  font-size: 34px;
+  color: #0A345C;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.card p {
+  color: #6b7280;
+  font-size: 15px;
+  margin-top: 0;
+}
+
+/* -------------------------------------------
+   BOTTOM SECTION (Calendar + Today List)
+------------------------------------------- */
+.bottom {
+  display: flex;
+  gap: 32px;
+  margin-top: 42px;
+  flex-wrap: wrap;
+}
+
+.calendar,
+.todayList {
+  flex: 1;
+  min-width: 300px;
+  background: #ffffff;
+  padding: 26px;
+  border-radius: 14px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease;
+}
+
+.calendar:hover,
+.todayList:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+/* -------------------------------------------
+   DATE PICKER
+------------------------------------------- */
+.datePicker {
+  margin-top: 18px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid #d7dce2;
+  background: #f9fafb;
+  transition: 0.2s;
+}
+
+.datePicker:focus {
+  outline: none;
+  border-color: #0A345C;
+  box-shadow: 0 0 0 3px rgba(10, 52, 92, 0.12);
+}
+
+/* -------------------------------------------
+   APPOINTMENT ROWS
+------------------------------------------- */
+.appCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 6px;
+  border-bottom: 1px solid #f0f2f5;
+  margin-top: 6px;
+  transition: 0.2s;
+}
+
+.appCard:last-child {
+  border-bottom: none;
+}
+
+.appCard:hover {
+  background: #f9fafc;
+  border-radius: 6px;
+  padding-left: 10px;
+}
