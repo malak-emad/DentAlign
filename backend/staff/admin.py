@@ -1,0 +1,72 @@
+from django.contrib import admin
+from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment
+
+
+@admin.register(Patient)
+class PatientAdmin(admin.ModelAdmin):
+    list_display = ('full_name', 'email', 'phone', 'date_of_birth', 'created_at')
+    list_filter = ('gender', 'created_at')
+    search_fields = ('first_name', 'last_name', 'email', 'phone')
+    readonly_fields = ('patient_id', 'created_at', 'updated_at')
+
+
+@admin.register(Staff)
+class StaffAdmin(admin.ModelAdmin):
+    list_display = ('user', 'department', 'specialization', 'hire_date', 'is_active')
+    list_filter = ('department', 'specialization', 'is_active', 'hire_date')
+    search_fields = ('user__full_name', 'user__email', 'specialization')
+    readonly_fields = ('staff_id', 'created_at', 'updated_at')
+
+
+@admin.register(Appointment)
+class AppointmentAdmin(admin.ModelAdmin):
+    list_display = ('patient', 'staff', 'appointment_date', 'appointment_time', 'status', 'appointment_type')
+    list_filter = ('status', 'appointment_type', 'appointment_date', 'staff')
+    search_fields = ('patient__first_name', 'patient__last_name', 'staff__user__full_name')
+    readonly_fields = ('appointment_id', 'created_at', 'updated_at')
+    date_hierarchy = 'appointment_date'
+
+
+@admin.register(MedicalRecord)
+class MedicalRecordAdmin(admin.ModelAdmin):
+    list_display = ('patient', 'staff', 'record_date', 'chief_complaint')
+    list_filter = ('record_date', 'staff')
+    search_fields = ('patient__first_name', 'patient__last_name', 'chief_complaint')
+    readonly_fields = ('record_id', 'created_at', 'updated_at')
+    date_hierarchy = 'record_date'
+
+
+@admin.register(Treatment)
+class TreatmentAdmin(admin.ModelAdmin):
+    list_display = ('treatment_id', 'appointment', 'treatment_code', 'description', 'cost', 'created_at')
+    list_filter = ('created_at', 'treatment_code')
+    search_fields = ('treatment_code', 'description', 'appointment__patient__first_name', 'appointment__patient__last_name')
+    readonly_fields = ('treatment_id',)
+    date_hierarchy = 'created_at'
+
+
+@admin.register(Diagnosis)
+class DiagnosisAdmin(admin.ModelAdmin):
+    list_display = ('diagnosis_id', 'record', 'icd10_code', 'notes', 'diagnosed_at')
+    list_filter = ('diagnosed_at', 'icd10_code')
+    search_fields = ('icd10_code', 'record__patient__first_name', 'record__patient__last_name', 'notes')
+    readonly_fields = ('diagnosis_id',)
+    date_hierarchy = 'diagnosed_at'
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = ('invoice_id', 'patient', 'total_amount', 'paid_amount', 'status', 'due_date')
+    list_filter = ('status', 'due_date', 'issued_date')
+    search_fields = ('patient__first_name', 'patient__last_name')
+    readonly_fields = ('invoice_id', 'balance_due', 'is_fully_paid', 'is_overdue', 'created_at', 'updated_at')
+    date_hierarchy = 'due_date'
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ('payment_id', 'invoice', 'amount', 'method', 'paid_at')
+    list_filter = ('method', 'paid_at')
+    search_fields = ('invoice__patient__first_name', 'invoice__patient__last_name')
+    readonly_fields = ('payment_id',)
+    date_hierarchy = 'paid_at'
