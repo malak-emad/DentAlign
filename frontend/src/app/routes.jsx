@@ -12,7 +12,7 @@ import StaffDashboard from "../features/staff/pages/StaffDashboard";
 import StaffAppointments from "../features/staff/pages/StaffAppointments";
 import StaffPatients from "../features/staff/pages/StaffPatients";
 import PatientDetails from "../features/staff/pages/PatientDetails";
-import StaffReports from "../features/staff/pages/StaffReports";
+// import StaffReports from "../features/staff/pages/StaffReports";
 import StaffProfile from "../features/staff/pages/StaffProfile";
 
 const routes = [
@@ -60,10 +60,10 @@ const routes = [
     path: "/staff/patient/:id",
     element: <StaffLayout><PatientDetails /></StaffLayout>,
   },
-  {
-    path: "/staff/reports",
-    element: <StaffLayout><StaffReports /></StaffLayout>,
-  },
+  // {
+  //   path: "/staff/reports",
+  //   element: <StaffLayout><StaffReports /></StaffLayout>,
+  // },
   {
     path: "/staff/profile",
     element: <StaffLayout><StaffProfile /></StaffLayout>,
