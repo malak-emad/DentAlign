@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./PatientNavbar.module.css";
 import menuIcon from "../../../assets/icons/menu.png";
 import bellIcon from "../../../assets/icons/bell.png";
@@ -7,7 +7,21 @@ import logo from "../../../assets/logos/medical-logo.png";
 import { Link } from "react-router-dom";
 
 export default function PatientNavbar({ onMenuToggle }) {
-  const patientName = "Sarah Mohamed";
+  const [patientName, setPatientName] = useState("Patient");
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        setPatientName(user.username || user.full_name || "Patient");
+      } catch (error) {
+        console.error('Failed to parse user data:', error);
+      }
+    }
+  }, []);
+
   const initials = patientName
     .split(" ")
     .slice(0, 2)

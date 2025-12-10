@@ -1,12 +1,71 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { patientApi } from "../api/patientApi";
 import styles from "./PatientDashboard.module.css";
 
 export default function PatientDashboard() {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const data = await patientApi.getDashboardStats();
+        setDashboardData(data);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch dashboard data:', err);
+        setError('Failed to load dashboard data. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <p>{error}</p>
+          <button onClick={() => window.location.reload()} className={styles.retryButton}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <p>No dashboard data available</p>
+        </div>
+      </div>
+    );
+  }
+
+  const { patient_info, next_appointment, pending_bills, latest_treatment, medical_records_count } = dashboardData;
+
   return (
     <div className={styles.container}>
 
       {/* PAGE TITLE */}
-      <h1 className={styles.pageTitle}>Dashboard</h1>
+      <h1 className={styles.pageTitle}>
+        Welcome back, {patient_info.name.split(' ')[0]}!
+      </h1>
 
       {/* GRID CARDS */}
       <div className={styles.grid}>
@@ -15,53 +74,104 @@ export default function PatientDashboard() {
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Next Appointment</h3>
 
-          <div className={styles.details}>
-            <p><strong>Doctor:</strong> Dr. Sarah Ahmed</p>
-            <p><strong>Date:</strong> Jan 12, 2026</p>
-            <p><strong>Time:</strong> 11:00 AM</p>
-          </div>
+          {next_appointment ? (
+            <div className={styles.details}>
+              <p><strong>Doctor:</strong> {next_appointment.doctor_name}</p>
+              <p><strong>Date:</strong> {new Date(next_appointment.date).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long',
+                day: 'numeric'
+              })}</p>
+              <p><strong>Time:</strong> {next_appointment.time}</p>
+              <p><strong>Reason:</strong> {next_appointment.reason}</p>
+            </div>
+          ) : (
+            <div className={styles.details}>
+              <p className={styles.emptyState}>No upcoming appointments scheduled</p>
+            </div>
+          )}
 
-          <button className={styles.secondaryBtn}>Reschedule</button>
+          <Link to="/patient/booking" className={styles.secondaryBtn}>
+            {next_appointment ? 'Reschedule' : 'Book Appointment'}
+          </Link>
         </div>
 
         {/* PENDING BILLS */}
         <div className={styles.card}>
           <h3 className={styles.cardTitle}>Pending Bills</h3>
 
-          <p className={styles.highlightNumber}>2 Outstanding</p>
+          {pending_bills.count > 0 ? (
+            <>
+              <p className={styles.highlightNumber}>
+                {pending_bills.count} Outstanding
+              </p>
+              <p className={styles.totalAmount}>
+                Total: ${pending_bills.total_amount.toFixed(2)}
+              </p>
+            </>
+          ) : (
+            <p className={styles.emptyState}>No pending bills</p>
+          )}
 
-          <button className={styles.primaryBtn}>Pay Now</button>
+          <Link to="/patient/bills" className={styles.primaryBtn}>
+            {pending_bills.count > 0 ? 'Pay Now' : 'View Bills'}
+          </Link>
         </div>
 
-        {/* PRESCRIPTION */}
+        {/* LATEST TREATMENT */}
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Latest Prescription</h3>
+          <h3 className={styles.cardTitle}>Latest Treatment</h3>
 
-          <ul className={styles.list}>
-            <li>Paracetamol 500mg</li>
-            <li>Cefdinir 300mg</li>
-          </ul>
+          {latest_treatment ? (
+            <div className={styles.details}>
+              <p><strong>Treatment:</strong> {latest_treatment.treatment_code}</p>
+              <p><strong>Description:</strong> {latest_treatment.description}</p>
+              {latest_treatment.date && (
+                <p><strong>Date:</strong> {new Date(latest_treatment.date).toLocaleDateString()}</p>
+              )}
+              {latest_treatment.cost > 0 && (
+                <p><strong>Cost:</strong> ${latest_treatment.cost.toFixed(2)}</p>
+              )}
+            </div>
+          ) : (
+            <p className={styles.emptyState}>No recent treatments</p>
+          )}
 
-          <button className={styles.secondaryBtn}>View All</button>
+          <Link to="/patient/prescriptions" className={styles.secondaryBtn}>
+            View All Treatments
+          </Link>
         </div>
 
-        {/* RADIOLOGY RESULTS */}
+        {/* MEDICAL RECORDS */}
         <div className={styles.card}>
-          <h3 className={styles.cardTitle}>Recent Radiology Result</h3>
+          <h3 className={styles.cardTitle}>Medical Records</h3>
 
-          <p className={styles.normalText}>Chest X‑Ray — Normal</p>
+          <p className={styles.highlightNumber}>
+            {medical_records_count} Records
+          </p>
 
-          <button className={styles.secondaryBtn}>View Images</button>
+          <Link to="/patient/history" className={styles.secondaryBtn}>
+            View Records
+          </Link>
         </div>
 
       </div>
 
       {/* QUICK ACTIONS */}
       <div className={styles.quickActions}>
-        <button className={styles.quickBtn}>Book Appointment</button>
-        <button className={styles.quickBtn}>My Records</button>
-        <button className={styles.quickBtn}>Bills</button>
-        <button className={styles.quickBtn}>Prescriptions</button>
+        <Link to="/patient/booking" className={styles.quickBtn}>
+          Book Appointment
+        </Link>
+        <Link to="/patient/history" className={styles.quickBtn}>
+          My Records
+        </Link>
+        <Link to="/patient/bills" className={styles.quickBtn}>
+          Bills
+        </Link>
+        <Link to="/patient/prescriptions" className={styles.quickBtn}>
+          Treatments
+        </Link>
       </div>
     </div>
   );

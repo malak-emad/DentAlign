@@ -2,6 +2,35 @@
   padding: 30px 40px;
 }
 
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
+
+.loading {
+  color: #666;
+}
+
+.error {
+  color: #dc3545;
+}
+
+.retryButton {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: #0A345C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.retryButton:hover {
+  background: #08243e;
+}
+
 .pageTitle {
   font-size: 28px;
   font-weight: 700;
@@ -88,6 +117,30 @@
   border-radius: 6px;
   cursor: pointer;
   transition: 0.2s ease;
+}
+
+.secondaryBtn:hover {
+  background: #d5e2f2;
+}
+
+/* LOADING AND ERROR STATES */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #64748b;
+  font-size: 16px;
+}
+
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #dc3545;
+  text-align: center;
+  font-size: 16px;
 }
 
 .secondaryBtn:hover {

@@ -9,7 +9,7 @@ import uuid
 class Patient(models.Model):
     """Model mapping to existing patients table"""
     patient_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='patient_profile')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='patient_profile', db_column='user_id')
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50) 
     email = models.EmailField(max_length=255, unique=True)

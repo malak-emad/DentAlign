@@ -68,7 +68,7 @@ const routes = [
   {
     path: "/staff/dashboard",
     element: (
-      <RoleBasedRoute allowedRoles={['Doctor']}>
+      <RoleBasedRoute allowedRoles={['Doctor', 'Nurse', 'Staff']}>
         <StaffLayout><StaffDashboard /></StaffLayout>
       </RoleBasedRoute>
     ),
@@ -76,7 +76,7 @@ const routes = [
   {
     path: "/staff/appointments",
     element: (
-      <RoleBasedRoute allowedRoles={['Doctor']}>
+      <RoleBasedRoute allowedRoles={['Doctor', 'Nurse', 'Staff']}>
         <StaffLayout><StaffAppointments /></StaffLayout>
       </RoleBasedRoute>
     ),
@@ -84,7 +84,7 @@ const routes = [
   {
     path: "/staff/patients",
     element: (
-      <RoleBasedRoute allowedRoles={['Doctor']}>
+      <RoleBasedRoute allowedRoles={['Doctor', 'Nurse', 'Staff']}>
         <StaffLayout><StaffPatients /></StaffLayout>
       </RoleBasedRoute>
     ),
@@ -92,7 +92,7 @@ const routes = [
   {
     path: "/staff/patient/:id",
     element: (
-      <RoleBasedRoute allowedRoles={['Doctor']}>
+      <RoleBasedRoute allowedRoles={['Doctor', 'Nurse', 'Staff']}>
         <StaffLayout><PatientDetails /></StaffLayout>
       </RoleBasedRoute>
     ),
@@ -104,34 +104,58 @@ const routes = [
   {
     path: "/staff/profile",
     element: (
-      <RoleBasedRoute allowedRoles={['Doctor']}>
+      <RoleBasedRoute allowedRoles={['Doctor', 'Nurse', 'Staff']}>
         <StaffLayout><StaffProfile /></StaffLayout>
       </RoleBasedRoute>
     ),
   },
   {
-  path: "/patient/dashboard",
-  element: <PatientLayout><PatientDashboard /></PatientLayout>
+    path: "/patient/dashboard",
+    element: (
+      <RoleBasedRoute allowedRoles={['Patient']}>
+        <PatientLayout><PatientDashboard /></PatientLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/patient/profile",
-    element: <PatientLayout><PatientProfile /></PatientLayout>
+    element: (
+      <RoleBasedRoute allowedRoles={['Patient']}>
+        <PatientLayout><PatientProfile /></PatientLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/patient/booking",
-    element: <PatientLayout><Booking /></PatientLayout>
+    element: (
+      <RoleBasedRoute allowedRoles={['Patient']}>
+        <PatientLayout><Booking /></PatientLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/patient/prescriptions",
-    element: <PatientLayout><PatientPrescriptions /></PatientLayout>
+    element: (
+      <RoleBasedRoute allowedRoles={['Patient']}>
+        <PatientLayout><PatientPrescriptions /></PatientLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/patient/history",
-    element: <PatientLayout><PatientHistory /></PatientLayout>
+    element: (
+      <RoleBasedRoute allowedRoles={['Patient']}>
+        <PatientLayout><PatientHistory /></PatientLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/patient/bills",
-    element: <PatientLayout><Bills /></PatientLayout>
+    element: (
+      <RoleBasedRoute allowedRoles={['Patient']}>
+        <PatientLayout><Bills /></PatientLayout>
+      </RoleBasedRoute>
+    ),
   },
 ];
 

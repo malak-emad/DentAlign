@@ -199,6 +199,29 @@
   color:#6a7786;
 }
 
+/* Error banner */
+.errorBanner {
+  background: #fee;
+  border: 1px solid #fcc;
+  color: #a33;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* Loading indicator */
+.loadingIndicator {
+  background: #f0f8ff;
+  border: 1px solid #cce;
+  color: #558;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 14px;
+}
+
 /* Responsiveness */
 @media (max-width: 980px) {
   .layout { flex-direction: column; }
