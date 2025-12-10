@@ -12,19 +12,19 @@ class PatientAdmin(admin.ModelAdmin):
 
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
-    list_display = ('user', 'department', 'specialization', 'hire_date', 'is_active')
-    list_filter = ('department', 'specialization', 'is_active', 'hire_date')
-    search_fields = ('user__full_name', 'user__email', 'specialization')
+    list_display = ('user', 'role_title', 'specialization', 'phone')
+    list_filter = ('role_title', 'specialization')
+    search_fields = ('user__full_name', 'user__email', 'specialization', 'first_name', 'last_name')
     readonly_fields = ('staff_id', 'created_at', 'updated_at')
 
 
 @admin.register(Appointment)
 class AppointmentAdmin(admin.ModelAdmin):
-    list_display = ('patient', 'staff', 'appointment_date', 'appointment_time', 'status', 'appointment_type')
-    list_filter = ('status', 'appointment_type', 'appointment_date', 'staff')
+    list_display = ('patient', 'staff', 'start_time', 'end_time', 'status', 'fee')
+    list_filter = ('status', 'start_time', 'staff')
     search_fields = ('patient__first_name', 'patient__last_name', 'staff__user__full_name')
     readonly_fields = ('appointment_id', 'created_at', 'updated_at')
-    date_hierarchy = 'appointment_date'
+    date_hierarchy = 'start_time'
 
 
 @admin.register(MedicalRecord)

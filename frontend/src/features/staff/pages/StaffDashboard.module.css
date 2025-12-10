@@ -98,8 +98,8 @@
 ------------------------------------------- */
 .appCard {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   padding: 14px 6px;
   border-bottom: 1px solid #f0f2f5;
   margin-top: 6px;
@@ -114,4 +114,188 @@
   background: #f9fafc;
   border-radius: 6px;
   padding-left: 10px;
+}
+
+.appCard .reason {
+  display: block;
+  color: #6b7280;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.appCard .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.appCard .details {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+  align-items: center;
+}
+
+/* -------------------------------------------
+   LOADING & ERROR STATES
+------------------------------------------- */
+.loading, .error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.loading {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.error {
+  flex-direction: column;
+  gap: 15px;
+  color: #dc2626;
+}
+
+.retryButton {
+  background: #0A345C;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.retryButton:hover {
+  background: #083147;
+}
+
+/* -------------------------------------------
+   WARNING INDICATOR
+------------------------------------------- */
+.warning {
+  font-size: 18px;
+  margin-left: 10px;
+}
+
+/* -------------------------------------------
+   REVENUE SUMMARY
+------------------------------------------- */
+.revenueSummary {
+  margin-top: 25px;
+  padding: 15px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.revenueSummary h4 {
+  margin: 0 0 10px 0;
+  color: #0A345C;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.revenueSummary p {
+  margin: 5px 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* -------------------------------------------
+   EMPTY STATE
+------------------------------------------- */
+.emptyState {
+  text-align: center;
+  padding: 20px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* -------------------------------------------
+   STATUS & QUICK STATS
+------------------------------------------- */
+.status {
+  font-size: 12px;
+  color: #10b981;
+  text-transform: capitalize;
+  margin-left: 10px;
+}
+
+.quickStats {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #f0f2f5;
+}
+
+.statItem {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.statItem span {
+  color: #6b7280;
+}
+
+.statItem strong {
+  color: #0A345C;
+}
+
+/* -------------------------------------------
+   OVERDUE ALERTS
+------------------------------------------- */
+.alertSection {
+  margin-top: 30px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.alertSection h3 {
+  margin: 0 0 15px 0;
+  color: #dc2626;
+  font-size: 18px;
+}
+
+.overdueList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.overdueItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #fed7d7;
+  font-size: 14px;
+}
+
+.overdueItem span:first-child {
+  font-weight: 600;
+  color: #374151;
+}
+
+.overdueItem span:nth-child(2) {
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.overdueItem span:last-child {
+  color: #6b7280;
+  font-size: 12px;
 }

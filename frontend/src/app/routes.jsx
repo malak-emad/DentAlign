@@ -24,6 +24,7 @@ import Booking from '../features/patient/pages/Booking';
 import PatientPrescriptions from '../features/patient/pages/PatientPrescription';
 import PatientHistory from '../features/patient/pages/History';
 import Bills from '../features/patient/pages/Bills';
+import RoleBasedRoute from '../components/common/RoleBasedRoute';
 
 
 
@@ -55,26 +56,46 @@ const routes = [
 
 
 
-  //   // --- STAFF ROUTES ---
+  //   // --- STAFF ROUTES (DOCTOR ONLY) ---
     {
     path: "/staff",
-    element: <StaffLayout><StaffDashboard /></StaffLayout>,
+    element: (
+      <RoleBasedRoute allowedRoles={['Doctor']}>
+        <StaffLayout><StaffDashboard /></StaffLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/staff/dashboard",
-    element: <StaffLayout><StaffDashboard /></StaffLayout>,
+    element: (
+      <RoleBasedRoute allowedRoles={['Doctor']}>
+        <StaffLayout><StaffDashboard /></StaffLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/staff/appointments",
-    element: <StaffLayout><StaffAppointments /></StaffLayout>,
+    element: (
+      <RoleBasedRoute allowedRoles={['Doctor']}>
+        <StaffLayout><StaffAppointments /></StaffLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/staff/patients",
-    element: <StaffLayout><StaffPatients /></StaffLayout>,
+    element: (
+      <RoleBasedRoute allowedRoles={['Doctor']}>
+        <StaffLayout><StaffPatients /></StaffLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
     path: "/staff/patient/:id",
-    element: <StaffLayout><PatientDetails /></StaffLayout>,
+    element: (
+      <RoleBasedRoute allowedRoles={['Doctor']}>
+        <StaffLayout><PatientDetails /></StaffLayout>
+      </RoleBasedRoute>
+    ),
   },
   // {
   //   path: "/staff/reports",
@@ -82,7 +103,11 @@ const routes = [
   // },
   {
     path: "/staff/profile",
-    element: <StaffLayout><StaffProfile /></StaffLayout>,
+    element: (
+      <RoleBasedRoute allowedRoles={['Doctor']}>
+        <StaffLayout><StaffProfile /></StaffLayout>
+      </RoleBasedRoute>
+    ),
   },
   {
   path: "/patient/dashboard",

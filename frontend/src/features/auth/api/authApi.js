@@ -115,10 +115,19 @@ export async function signupNurse(nurseData) {
  * @returns {Promise} - API response with user data and role information
  */
 export async function login(loginData) {
-  return makeApiRequest('/auth/login/', {
+  const result = await makeApiRequest('/auth/login/', {
     method: 'POST',
     body: JSON.stringify(loginData)
   });
+  
+  // If login is successful, store the token and user data
+  if (result.success && result.data.token) {
+    localStorage.setItem('token', result.data.token);
+    localStorage.setItem('user', JSON.stringify(result.data.user));
+    console.log('🔐 Token stored successfully');
+  }
+  
+  return result;
 }
 
 /**

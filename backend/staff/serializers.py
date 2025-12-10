@@ -35,11 +35,14 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
 class TreatmentSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='appointment.patient.full_name', read_only=True)
     staff_name = serializers.CharField(source='appointment.staff.user.full_name', read_only=True)
-    appointment_date = serializers.DateField(source='appointment.appointment_date', read_only=True)
+    appointment_date = serializers.SerializerMethodField()
     
     class Meta:
         model = Treatment
         fields = '__all__'
+    
+    def get_appointment_date(self, obj):
+        return obj.appointment.start_time.date() if obj.appointment and obj.appointment.start_time else None
 
 
 class DiagnosisSerializer(serializers.ModelSerializer):
@@ -78,32 +81,47 @@ class PatientListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Patient
-        fields = ['patient_id', 'first_name', 'last_name', 'full_name', 'email', 'phone', 'date_of_birth', 'age', 'last_appointment']
+        fields = ['patient_id', 'first_name', 'last_name', 'full_name', 'email', 'phone', 'dob', 'age', 'last_appointment']
     
     def get_age(self, obj):
-        return obj.age
+        if obj.dob:
+            from datetime import date
+            today = date.today()
+            return today.year - obj.dob.year - ((today.month, today.day) < (obj.dob.month, obj.dob.day))
+        return None
     
     def get_last_appointment(self, obj):
-        last_apt = obj.appointments.order_by('-appointment_date').first()
-        return last_apt.appointment_date.isoformat() if last_apt else None
+        last_apt = obj.appointments.order_by('-start_time').first()
+        return last_apt.start_time.date().isoformat() if last_apt else None
 
 
 class AppointmentListSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='patient.full_name', read_only=True)
     staff_name = serializers.CharField(source='staff.user.full_name', read_only=True)
+    appointment_date = serializers.SerializerMethodField()
+    appointment_time = serializers.SerializerMethodField()
     
     class Meta:
         model = Appointment
-        fields = ['appointment_id', 'patient_name', 'staff_name', 'appointment_date', 'appointment_time', 'status', 'appointment_type']
+        fields = ['appointment_id', 'patient_name', 'staff_name', 'appointment_date', 'appointment_time', 'status', 'reason']
+    
+    def get_appointment_date(self, obj):
+        return obj.start_time.date() if obj.start_time else None
+    
+    def get_appointment_time(self, obj):
+        return obj.start_time.time() if obj.start_time else None
 
 
 class TreatmentSummarySerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='appointment.patient.full_name', read_only=True)
-    appointment_date = serializers.DateField(source='appointment.appointment_date', read_only=True)
+    appointment_date = serializers.SerializerMethodField()
     
     class Meta:
         model = Treatment
         fields = ['treatment_id', 'patient_name', 'treatment_code', 'description', 'cost', 'appointment_date', 'created_at']
+    
+    def get_appointment_date(self, obj):
+        return obj.appointment.start_time.date() if obj.appointment and obj.appointment.start_time else None
 
 
 class InvoiceSummarySerializer(serializers.ModelSerializer):

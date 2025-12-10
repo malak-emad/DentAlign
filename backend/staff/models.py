@@ -9,17 +9,15 @@ import uuid
 class Patient(models.Model):
     """Model mapping to existing patients table"""
     patient_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True, related_name='patient_profile')
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50) 
     email = models.EmailField(max_length=255, unique=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    date_of_birth = models.DateField(blank=True, null=True)
+    dob = models.DateField(blank=True, null=True)  # date of birth
     gender = models.CharField(max_length=10, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
-    emergency_contact = models.CharField(max_length=100, blank=True, null=True)
-    emergency_phone = models.CharField(max_length=20, blank=True, null=True)
-    insurance_provider = models.CharField(max_length=100, blank=True, null=True)
-    insurance_number = models.CharField(max_length=50, blank=True, null=True)
+    medical_history = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -32,18 +30,23 @@ class Patient(models.Model):
     @property
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
+    
+    @property 
+    def date_of_birth(self):
+        """Alias for backwards compatibility"""
+        return self.dob
 
 
 class Staff(models.Model):
     """Model mapping to existing staff table"""
     staff_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='staff_profile')
-    department = models.CharField(max_length=100, blank=True, null=True)
+    first_name = models.CharField(max_length=50, blank=True, null=True)
+    last_name = models.CharField(max_length=50, blank=True, null=True) 
+    role_title = models.CharField(max_length=100, blank=True, null=True)
+    license_number = models.CharField(max_length=50, blank=True, null=True)
     specialization = models.CharField(max_length=100, blank=True, null=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
-    hire_date = models.DateField(blank=True, null=True)
-    salary = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -51,7 +54,9 @@ class Staff(models.Model):
         db_table = 'staff'
 
     def __str__(self):
-        return f"{self.user.full_name} - {self.specialization or 'Staff'}"
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name} - {self.role_title or 'Staff'}"
+        return f"{self.user.full_name} - {self.role_title or 'Staff'}"
 
 
 class Appointment(models.Model):
@@ -68,12 +73,11 @@ class Appointment(models.Model):
     appointment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='appointments')
-    appointment_date = models.DateField()
-    appointment_time = models.TimeField()
-    duration_minutes = models.IntegerField(default=30)
-    appointment_type = models.CharField(max_length=100, blank=True, null=True)
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
+    fee = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
-    notes = models.TextField(blank=True, null=True)
+    reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -81,7 +85,17 @@ class Appointment(models.Model):
         db_table = 'appointments'
 
     def __str__(self):
-        return f"{self.patient.full_name} - {self.appointment_date} {self.appointment_time}"
+        return f"{self.patient.full_name} - {self.start_time}"
+    
+    @property
+    def appointment_date(self):
+        """Return the date part of start_time for backwards compatibility"""
+        return self.start_time.date()
+    
+    @property
+    def appointment_time(self):
+        """Return the time part of start_time for backwards compatibility"""
+        return self.start_time.time()
 
 
 class MedicalRecord(models.Model):

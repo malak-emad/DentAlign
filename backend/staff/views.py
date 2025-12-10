@@ -1,10 +1,12 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
+
+from .permissions import IsDoctorOnly, IsDoctorOrStaff
 
 from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment
 from .serializers import (
@@ -52,7 +54,7 @@ class PatientDetailView(generics.RetrieveAPIView):
         # Add related data
         data = serializer.data
         data['appointments'] = AppointmentListSerializer(
-            patient.appointments.order_by('-appointment_date')[:10], 
+            patient.appointments.order_by('-start_time')[:10], 
             many=True
         ).data
         data['medical_records'] = MedicalRecordSerializer(
@@ -86,7 +88,7 @@ class AppointmentListView(generics.ListAPIView):
         if date:
             try:
                 filter_date = datetime.strptime(date, '%Y-%m-%d').date()
-                queryset = queryset.filter(appointment_date=filter_date)
+                queryset = queryset.filter(start_time__date=filter_date)
             except ValueError:
                 pass
 
@@ -96,7 +98,7 @@ class AppointmentListView(generics.ListAPIView):
         if staff_id:
             queryset = queryset.filter(staff__staff_id=staff_id)
 
-        return queryset.order_by('appointment_date', 'appointment_time')
+        return queryset.order_by('start_time')
 
 
 class TreatmentListView(generics.ListCreateAPIView):
@@ -160,11 +162,10 @@ class PaymentListView(generics.ListCreateAPIView):
 
 
 @api_view(['GET'])
+@permission_classes([IsDoctorOnly])
 def dashboard_stats(request):
-    """Get dashboard statistics for staff"""
-    if not request.user.is_authenticated:
-        return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
-
+    """Get dashboard statistics for staff - DOCTOR ONLY"""
+    # No need to check is_authenticated since IsDoctorOnly already checks it
     today = timezone.now().date()
     this_month = timezone.now().replace(day=1).date()
     
@@ -174,9 +175,9 @@ def dashboard_stats(request):
             'new_this_month': Patient.objects.filter(created_at__date__gte=this_month).count(),
         },
         'appointments': {
-            'today': Appointment.objects.filter(appointment_date=today).count(),
+            'today': Appointment.objects.filter(start_time__date=today).count(),
             'this_week': Appointment.objects.filter(
-                appointment_date__gte=today - timedelta(days=7)
+                start_time__date__gte=today - timedelta(days=7)
             ).count(),
             'pending': Appointment.objects.filter(status='scheduled').count(),
         },
@@ -198,7 +199,7 @@ def dashboard_stats(request):
         },
         'recent_activities': {
             'recent_appointments': AppointmentListSerializer(
-                Appointment.objects.filter(appointment_date=today).order_by('appointment_time')[:5],
+                Appointment.objects.filter(start_time__date=today).order_by('start_time')[:5],
                 many=True
             ).data,
             'recent_treatments': TreatmentSummarySerializer(

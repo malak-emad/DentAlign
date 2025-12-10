@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.db import transaction
-from .models import Role, User
+from .models import Role, User, AuthToken
 from .serializers import RoleSerializer, UserSerializer, PatientSignupSerializer, DoctorSignupSerializer, NurseSignupSerializer, LoginSerializer
 
 
@@ -147,6 +147,9 @@ def login(request):
     if serializer.is_valid():
         user = serializer.validated_data['user']
         
+        # Get or create auth token for the user
+        token, created = AuthToken.objects.get_or_create(user=user)
+        
         # Prepare user response data
         user_data = {
             'user_id': str(user.user_id),
@@ -159,6 +162,7 @@ def login(request):
         return Response({
             'message': 'Login successful',
             'user': user_data,
+            'token': token.key,  # Include the authentication token
             'success': True
         }, status=status.HTTP_200_OK)
     
