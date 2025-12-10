@@ -213,7 +213,9 @@ export default function Booking() {
                         onClick={() => setSelectedDoctor(doc)}
                         disabled={doctorsLoading}
                       >
-                        <img src={doc.avatar} alt={doc.name} className={styles.avatar}/>
+                        <div className={styles.avatar}>
+                          {doc.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
                         <div className={styles.doctorInfo}>
                           <div className={styles.doctorName}>{doc.name}</div>
                           <div className={styles.doctorSpec}>{doc.specialty}</div>
@@ -242,7 +244,9 @@ export default function Booking() {
                         }}
                         disabled={doctorsLoading}
                       >
-                        <img src={doc.avatar} alt={doc.name} className={styles.avatar}/>
+                        <div className={styles.avatar}>
+                          {doc.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
                         <div className={styles.doctorInfo}>
                           <div className={styles.doctorName}>{doc.name}</div>
                           <div className={styles.doctorSpec}>{doc.specialty}</div>
