@@ -5,20 +5,32 @@ export default function Contact() {
   return (
     <div className={styles.container}>
 
-      {/* Top banner section */}
-      <section className={styles.headerSection}>
+      {/* HERO / HEADER */}
+      <section className={styles.hero}>
         <h1>Contact Us</h1>
-        <p>Email: example@gmail.com</p>
-        <p>Phone: +201836xx</p>
+        <p>We are here to assist you anytime.</p>
       </section>
 
-      <section className={styles.middleSection}>
-        {/* <p>We are here to help you anytime.</p> */}
+      {/* CONTACT INFO BLOCK */}
+      <section className={styles.infoSection}>
+        <div className={styles.infoCard}>
+          <h2>Get in Touch</h2>
+
+          <p><strong>Email:</strong> example@gmail.com</p>
+          <p><strong>Phone:</strong> +20 18 36 XX</p>
+          <p><strong>Address:</strong> Cairo, Egypt</p>
+
+          <div className={styles.line}></div>
+
+          <p className={styles.smallText}>
+            Our support team responds within 24 hours.
+          </p>
+        </div>
       </section>
 
-      {/* Bottom blue section */}
-      <section className={styles.bottomSection}>
-        <p>We are here to help you anytime.</p>
+      {/* FOOTER STRIP */}
+      <section className={styles.footerStrip}>
+        <p>Your health and comfort matter to us.</p>
       </section>
 
     </div>
