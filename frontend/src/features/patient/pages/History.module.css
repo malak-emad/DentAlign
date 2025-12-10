@@ -1,0 +1,332 @@
+/* PatientHistory.module.css
+   Professional, clinical look: DentAlign color palette
+*/
+
+:root {
+  --brand: #0A345C;
+  --muted: #6b7684;
+  --accent: #0055ff;
+  --surface: #ffffff;
+  --card-border: #e6e9ef;
+  --soft-bg: #f6f8fb;
+}
+
+/* page container */
+.container {
+  padding: 28px 36px;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #22323a;
+}
+
+/* top header row */
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--brand);
+  margin: 0;
+}
+
+/* filters row (right) */
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* search input */
+.search {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d6dde6;
+  min-width: 300px;
+  font-size: 14px;
+}
+
+/* select */
+.select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #d6dde6;
+  background: var(--surface);
+  min-width: 170px;
+}
+
+/* date inputs */
+.dateInput {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d6dde6;
+}
+
+/* main grid: timeline + sidebar */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* responsive: stack on small screens */
+@media (max-width: 980px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+  .filters .search { min-width: 200px; }
+}
+
+/* ---------------- timeline col ---------------- */
+.timelineCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  color: var(--brand);
+  margin: 0 0 6px 0;
+  font-weight: 700;
+}
+
+/* empty state */
+.empty {
+  padding: 18px;
+  border-radius: 10px;
+  background: #fff6f6;
+  color: #8a2d2d;
+}
+
+/* timeline wrapper */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* each timeline item: date column + content column */
+.timelineItem {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* date box */
+.timelineDate {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.dateBox {
+  background: #f8fbff;
+  border: 1px solid #e7f0ff;
+  padding: 8px 10px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.dateDay {
+  font-weight: 700;
+  color: var(--brand);
+  font-size: 14px;
+}
+
+.dateTime {
+  font-size: 13px;
+  color: #3a4a55;   
+  margin-top: 6px;
+}
+
+/* content */
+.timelineContent {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 3px 10px rgba(18, 27, 34, 0.04);
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.itemDoctor {
+  font-weight: 700;
+  color: var(--brand);
+  font-size: 15px;
+}
+
+.itemReason {
+  font-size: 14px;
+  color: #3a4a55;
+  margin-top: 4px;
+}
+
+.itemTags {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag {
+  background: #fff7e6;
+  color: #7a5b1a;
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(227,199,161,0.4);
+}
+
+/* item body */
+.itemBody {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #33424f;
+  font-size: 14px;
+}
+
+.row strong { margin-right: 6px; }
+
+/* actions */
+.itemActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+/* link-style button */
+.linkBtn {
+  background: transparent;
+  border: 1px solid #d7e3fb;
+  color: var(--accent);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.linkBtn:hover {
+  background: #f2f7ff;
+}
+
+/* ---------------- side column ---------------- */
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* generic card */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  padding: 14px;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(18, 27, 34, 0.03);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.smallEdit {
+  background: #fff;
+  border: 1px solid #eef3ff;
+  color: var(--brand);
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* chips list */
+.chips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.chip {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fbfdff;
+  border: 1px solid #e9f1ff;
+  display:flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chipNote {
+  color: #3a4a55;
+  font-size: 13px;
+}
+
+/* allergy */
+.allergy {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff6f6;
+  border: 1px solid #feeaea;
+  color: #8a2d2d;
+}
+
+/* surgeries list */
+.simpleList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.surgTitle { font-weight: 600; }
+.surgDate { color: #3a4a55; font-size: 13px; }
+
+/* radiology list */
+.radiologyList {
+  list-style: none;
+  margin:0;
+  padding: 0;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radItem {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #eef4ff;
+  background: #fbfdff;
+}
+
+.radType { font-weight: 600; color: var(--brand); }
+.radMeta { font-size: 13px; color: #3a4a55; }
+
+/* small empty */
+.empty { color: var(--muted); font-size: 14px; }
+
+

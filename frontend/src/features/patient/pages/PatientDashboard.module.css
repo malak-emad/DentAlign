@@ -1,0 +1,119 @@
+.container {
+  padding: 30px 40px;
+}
+
+.pageTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0A345C;
+  margin-bottom: 30px;
+  letter-spacing: 0.5px;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+}
+
+/* CARD */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.cardTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0A345C;
+  margin-bottom: 16px;
+}
+
+.details p {
+  margin: 4px 0;
+  font-size: 15px;
+  color: #34495e;
+}
+
+.list {
+  padding-left: 18px;
+  margin-bottom: 16px;
+  color: #34495e;
+}
+
+.normalText {
+  color: #34495e;
+  margin-bottom: 16px;
+}
+
+.highlightNumber {
+  font-size: 26px;
+  font-weight: 700;
+  color: #c0392b;
+  margin: 10px 0 20px 0;
+}
+
+/* BUTTONS */
+.primaryBtn {
+  width: 100%;
+  padding: 10px;
+  background: #0A345C;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.primaryBtn:hover {
+  background: #0C447A;
+}
+
+.secondaryBtn {
+  width: 100%;
+  padding: 10px;
+  background: #eef2f7;
+  border: none;
+  color: #0A345C;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.secondaryBtn:hover {
+  background: #e3e8ef;
+}
+
+/* QUICK ACTIONS */
+.quickActions {
+  margin-top: 35px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.quickBtn {
+  flex: 1;
+  min-width: 180px;
+  padding: 14px;
+  background: #f8f9fc;
+  border: 1px solid #d9dde3;
+  border-radius: 8px;
+  color: #0A345C;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.quickBtn:hover {
+  background: #eef2f7;
+}

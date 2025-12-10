@@ -15,6 +15,18 @@ import PatientDetails from "../features/staff/pages/PatientDetails";
 // import StaffReports from "../features/staff/pages/StaffReports";
 import StaffProfile from "../features/staff/pages/StaffProfile";
 
+import PatientLayout from "../features/patient/components/PatientLayout";
+// frontend\src\features\patient\components\PatientLayout.jsx
+import PatientDashboard from "../features/patient/pages/PatientDashboard";
+import PatientProfile from '../features/patient/pages/PatientProfile';
+import Booking from '../features/patient/pages/Booking';
+
+import PatientPrescriptions from '../features/patient/pages/PatientPrescription';
+import PatientHistory from '../features/patient/pages/History';
+import Bills from '../features/patient/pages/Bills';
+
+
+
 const routes = [
   {
     path: '/',
@@ -44,6 +56,10 @@ const routes = [
 
 
   //   // --- STAFF ROUTES ---
+    {
+    path: "/staff",
+    element: <StaffLayout><StaffDashboard /></StaffLayout>,
+  },
   {
     path: "/staff/dashboard",
     element: <StaffLayout><StaffDashboard /></StaffLayout>,
@@ -67,7 +83,31 @@ const routes = [
   {
     path: "/staff/profile",
     element: <StaffLayout><StaffProfile /></StaffLayout>,
-  }
+  },
+  {
+  path: "/patient/dashboard",
+  element: <PatientLayout><PatientDashboard /></PatientLayout>
+  },
+  {
+    path: "/patient/profile",
+    element: <PatientLayout><PatientProfile /></PatientLayout>
+  },
+  {
+    path: "/patient/booking",
+    element: <PatientLayout><Booking /></PatientLayout>
+  },
+  {
+    path: "/patient/prescriptions",
+    element: <PatientLayout><PatientPrescriptions /></PatientLayout>
+  },
+  {
+    path: "/patient/history",
+    element: <PatientLayout><PatientHistory /></PatientLayout>
+  },
+  {
+    path: "/patient/bills",
+    element: <PatientLayout><Bills /></PatientLayout>
+  },
 ];
 
 export default routes;
