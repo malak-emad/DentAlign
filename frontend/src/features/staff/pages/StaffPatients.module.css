@@ -1,5 +1,5 @@
 /* =========================================================
-   CONTAINER + PAGE TITLE
+   CONTAINER + HEADER
    ========================================================= */
 
 .container {
@@ -8,12 +8,43 @@
   margin: 0 auto;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
 .pageTitle {
   font-size: 28px;
   font-weight: 700;
   color: #0A345C;
-  margin-bottom: 28px;
   letter-spacing: 0.4px;
+  margin: 0;
+}
+
+.searchContainer {
+  flex: 1;
+  max-width: 400px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e1e5e9;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #f8f9fa;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #0A345C;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(10, 52, 92, 0.1);
 }
 
 /* =========================================================
@@ -32,20 +63,19 @@
 
 .card {
   background: #ffffff;
-  
-  padding: 22px 18px;
+  padding: 20px;
   border-radius: 14px;
-
-  text-align: center;
   text-decoration: none;
   color: #1a1a1a;
-
   box-shadow: 
     0 2px 4px rgba(0,0,0,0.06),
     0 4px 12px rgba(0,0,0,0.04);
-
   transition: all 0.28s ease;
   border: 1px solid #edf0f3;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
 }
 
 .card:hover {
@@ -85,9 +115,147 @@
   margin: 10px 0 6px;
 }
 
-.card p {
+/* =========================================================
+   PATIENT AVATAR & INFO
+   ========================================================= */
+
+.patientAvatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0A345C, #1e5a8a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.patientInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.patientName {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0A345C;
+  margin: 0 0 4px 0;
+}
+
+.patientAge {
   font-size: 14px;
-  color: #6c757d;
+  color: #6b7280;
+  margin: 0 0 2px 0;
+}
+
+.patientEmail {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 2px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.patientPhone {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 4px 0;
+}
+
+.lastAppointment {
+  font-size: 12px;
+  color: #059669;
+  font-weight: 500;
   margin: 0;
+}
+
+/* =========================================================
+   LOADING & ERROR STATES
+   ========================================================= */
+
+.loading, .error, .emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 80px 20px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #edf0f3;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.loading {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.error {
+  flex-direction: column;
+  gap: 15px;
+  color: #dc2626;
+}
+
+.retryButton {
+  background: #0A345C;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.retryButton:hover {
+  background: #083144;
+}
+
+.emptyState {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* =========================================================
+   RESPONSIVE DESIGN
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+  
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .searchContainer {
+    max-width: none;
+  }
+  
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .card {
+    flex-direction: column;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .patientInfo {
+    text-align: center;
+  }
+  
+  .patientAvatar {
+    margin-bottom: 12px;
+  }
 }
 

@@ -101,3 +101,133 @@
   font-weight: 600;
   color: #333;
 }
+
+/* ------------------------------------
+   AVATAR (instead of photo)
+------------------------------------ */
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #0A345C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+/* ------------------------------------
+   STATUS BADGES
+------------------------------------ */
+.status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+}
+
+.statusCompleted {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.statusConfirmed {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.statusScheduled {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.statusCancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.statusDefault {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+/* ------------------------------------
+   LOADING STATE
+------------------------------------ */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.loading p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ------------------------------------
+   ERROR STATE
+------------------------------------ */
+.error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  gap: 15px;
+  color: #dc2626;
+}
+
+.retryButton {
+  background: #0A345C;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.retryButton:hover {
+  background: #083048;
+}
+
+/* ------------------------------------
+   EMPTY STATE
+------------------------------------ */
+.emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.emptyState p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}

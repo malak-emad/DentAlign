@@ -52,6 +52,29 @@ export const staffApi = {
     }
   },
 
+  // Get staff profile
+  getProfile: async () => {
+    try {
+      return await makeAuthenticatedRequest('/profile/');
+    } catch (error) {
+      console.error('Failed to fetch profile:', error);
+      throw error;
+    }
+  },
+
+  // Update staff profile
+  updateProfile: async (profileData) => {
+    try {
+      return await makeAuthenticatedRequest('/profile/', {
+        method: 'PUT',
+        body: JSON.stringify(profileData),
+      });
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      throw error;
+    }
+  },
+
   // Patient APIs
   getPatients: async (searchParams = {}) => {
     const params = new URLSearchParams(searchParams);
