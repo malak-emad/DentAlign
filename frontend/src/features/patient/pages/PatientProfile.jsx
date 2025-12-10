@@ -3,8 +3,8 @@ import styles from "./PatientProfile.module.css";
 
 export default function PatientProfile() {
   const patient = {
-    name: "Malak Fouad",
-    email: "malak.fouad@example.com",
+    name: "Sarah Mohamed",
+    email: "sarah.mohamed@example.com",
     phone: "+201 555 777 999",
     gender: "Female",
     birthdate: "1999‑06‑14",
