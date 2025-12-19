@@ -1,0 +1,76 @@
+.box {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+}
+
+.box h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+/* Service Card */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+
+  background: #f9fafb;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Hover effect */
+.item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+/* Active (selected) */
+.active {
+  background: #e6f0fa;
+  border-color: #0A345C;
+  box-shadow: 0 4px 12px rgba(10, 52, 92, 0.18);
+}
+
+/* Checkbox */
+.item input {
+  width: 16px;
+  height: 16px;
+  accent-color: #0A345C;
+  cursor: pointer;
+}
+
+/* Text */
+.labelText {
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+/* Stronger text when active */
+.active .labelText {
+  font-weight: 700;
+  color: #0A345C;
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import PublicLayout from '../components/common/PublicLayout';
-
+import DoctorOverview from '../features/home/pages/DoctorOverview';
 import Login from '../features/auth/pages/Login';
 import Signup from '../features/auth/pages/Signup';
 import DoctorSignup from '../features/auth/pages/DoctorSignup';
@@ -12,8 +12,10 @@ import StaffDashboard from "../features/staff/pages/StaffDashboard";
 import StaffAppointments from "../features/staff/pages/StaffAppointments";
 import StaffPatients from "../features/staff/pages/StaffPatients";
 import PatientDetails from "../features/staff/pages/PatientDetails";
-// import StaffReports from "../features/staff/pages/StaffReports";
+import StaffReports from "../features/staff/pages/StaffReports";
 import StaffProfile from "../features/staff/pages/StaffProfile";
+import StaffNotifications from "../features/staff/pages/StaffNotifications";
+import ClinicSession from "../features/staff/pages/ClinicSession";
 
 import PatientLayout from "../features/patient/components/PatientLayout";
 // frontend\src\features\patient\components\PatientLayout.jsx
@@ -32,6 +34,10 @@ const routes = [
   {
     path: '/',
     element: <PublicLayout><Home /></PublicLayout>,   
+  },
+    {
+    path: '/doctorOverview',
+    element: <PublicLayout><DoctorOverview /></PublicLayout>,   
   },
   {
     path: '/login',
@@ -97,10 +103,22 @@ const routes = [
       </RoleBasedRoute>
     ),
   },
-  // {
-  //   path: "/staff/reports",
-  //   element: <StaffLayout><StaffReports /></StaffLayout>,
-  // },
+    {
+    path: "/staff/clinic-session",
+    element: (
+      <RoleBasedRoute allowedRoles={['Doctor', 'Nurse', 'Staff']}>
+        <StaffLayout><ClinicSession /></StaffLayout>
+      </RoleBasedRoute>
+    ),
+  },
+  {
+    path: "/staff/reports",
+    element: <StaffLayout><StaffReports /></StaffLayout>,
+  },
+  {
+    path: "/staff/notifications",
+    element: <StaffLayout><StaffNotifications /></StaffLayout>,
+  },
   {
     path: "/staff/profile",
     element: (

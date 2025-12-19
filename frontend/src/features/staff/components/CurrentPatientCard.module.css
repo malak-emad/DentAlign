@@ -1,0 +1,34 @@
+.card {
+  background: #f8fafc;
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.info {
+  font-size: 14px;
+  color: #475569;
+  margin-top: 6px;
+}
+
+.endBtn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #dc2626;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.endBtn:hover {
+  background: #b91c1c;
+}

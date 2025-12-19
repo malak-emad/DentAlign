@@ -1,0 +1,44 @@
+.timerBox {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid #eef0f4;
+  text-align: center;
+}
+
+.time {
+  font-size: 32px;
+  font-weight: 800;
+  color: #0A345C;
+  margin-bottom: 12px;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pauseBtn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+
+  background: #0A345C;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.pauseBtn:hover {
+  background: #0C447A;
+}
+
+.pauseBtn:active {
+  transform: scale(0.96);
+}
+
