@@ -1,0 +1,101 @@
+:root {
+  --accent-strong: #0A345C;
+  --accent-light: #E3C7A1;
+}
+
+/* Page */
+.notificationsPage {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.header h2 {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--accent-strong);
+}
+
+.clearBtn {
+  background: transparent;
+  border: none;
+  color: #dc2626;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.clearBtn:hover {
+  text-decoration: underline;
+}
+
+/* List */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Notification Card */
+.notificationCard {
+  display: flex;
+  gap: 16px;
+  padding: 18px;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #eef0f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.notificationCard:hover {
+  background: #f9fafc;
+}
+
+/* Unread */
+.unread {
+  border-left: 4px solid var(--accent-strong);
+  background: #f6f9fc;
+}
+
+/* Icon */
+.icon {
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* Content */
+.content h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.content p {
+  margin: 6px 0 8px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.time {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 80px 20px;
+  color: #9ca3af;
+  font-size: 16px;
+}

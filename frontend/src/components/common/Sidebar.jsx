@@ -30,6 +30,16 @@ export default function Sidebar({ open, onClose }) {
 
         <li>
           <NavLink 
+            to="/staff/clinic-session"
+            className={({ isActive }) => isActive ? styles.active : ""}
+            onClick={onClose}
+          >
+            Clinic Session
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink 
             to="/staff/appointments"
             className={({ isActive }) => isActive ? styles.active : ""}
             onClick={onClose}

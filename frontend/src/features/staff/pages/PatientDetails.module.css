@@ -91,6 +91,7 @@
    =========================== */
 .tabs {
   margin-top: 28px;
+  /* justify-content: center;  */
   display: flex;
   gap: 16px;
 }
@@ -310,7 +311,7 @@
   margin: 0;
 }
 
-/* Invoices */
+/* Invoices
 .invoicesList {
   display: grid;
   gap: 16px;
@@ -375,4 +376,4 @@
 
 .invoiceDetails p {
   margin: 4px 0;
-}
+} */
