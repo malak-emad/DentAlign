@@ -25,7 +25,7 @@ export default function PatientNavbar({ onMenuToggle }) {
   const initials = patientName
     .split(" ")
     .slice(0, 2)
-    .map((n) => n[0])
+    .map((n) => n[0].toUpperCase())
     .join("");
 
   return (

@@ -68,15 +68,15 @@ def dashboard_stats(request):
         today = timezone.now().date()
         upcoming_appointments = Appointment.objects.filter(
             patient=patient,
-            appointment_date__gte=today,
+            start_time__date__gte=today,
             status__in=['scheduled', 'confirmed']
-        ).order_by('appointment_date', 'start_time')[:3]
+        ).order_by('start_time')[:3]
         
         # Get recent appointments for history
         recent_appointments = Appointment.objects.filter(
             patient=patient,
-            appointment_date__lt=today
-        ).order_by('-appointment_date', '-start_time')[:5]
+            start_time__date__lt=today
+        ).order_by('-start_time')[:5]
         
         # Get pending invoices
         pending_invoices = Invoice.objects.filter(
@@ -86,8 +86,8 @@ def dashboard_stats(request):
         
         # Get recent treatments
         recent_treatments = Treatment.objects.filter(
-            patient=patient
-        ).order_by('-appointment__appointment_date')[:3]
+            appointment__patient=patient
+        ).order_by('-appointment__start_time')[:3]
         
         # Get medical records count
         medical_records_count = MedicalRecord.objects.filter(patient=patient).count()
@@ -99,8 +99,8 @@ def dashboard_stats(request):
             next_appointment_data = {
                 'appointment_id': str(next_apt.appointment_id),
                 'doctor_name': f"{next_apt.staff.first_name or ''} {next_apt.staff.last_name or ''}".strip() or "Staff Member",
-                'date': next_apt.appointment_date.strftime('%Y-%m-%d'),
-                'time': next_apt.start_time.strftime('%I:%M %p') if next_apt.start_time else 'Time TBD',
+                'date': next_apt.start_time.strftime('%Y-%m-%d'),
+                'time': next_apt.start_time.strftime('%I:%M %p'),
                 'reason': next_apt.reason or 'General Consultation',
                 'status': next_apt.status
             }
@@ -113,7 +113,7 @@ def dashboard_stats(request):
                 'treatment_id': str(treatment.treatment_id),
                 'treatment_code': treatment.treatment_code,
                 'description': treatment.description,
-                'date': treatment.appointment.appointment_date.strftime('%Y-%m-%d') if treatment.appointment else None,
+                'date': treatment.appointment.start_time.strftime('%Y-%m-%d') if treatment.appointment else None,
                 'cost': float(treatment.cost) if treatment.cost else 0
             }
         
@@ -173,45 +173,27 @@ def patient_profile(request):
         try:
             patient = Patient.objects.get(user=request.user)
         except Patient.DoesNotExist:
-            # Return mock data if no patient profile exists
-            if request.method == 'GET':
-                mock_profile = {
-                    'name': request.user.full_name or request.user.username or 'Patient',
-                    'email': request.user.email or 'patient@example.com',
-                    'phone': '+123-456-7890',
-                    'gender': 'Not specified',
-                    'birthdate': '1990-01-01',
-                    'blood_type': 'O+',
-                    'address': '123 Main St, City, Country',
-                    'medical_history': 'No medical history on file',
-                    'emergency_contact': {
-                        'name': 'Emergency Contact',
-                        'phone': '+123-456-7890',
-                        'relationship': 'Family'
-                    }
-                }
-                return Response(mock_profile, status=status.HTTP_200_OK)
-            else:
-                return Response(
-                    {'error': 'Cannot update profile. Patient record not found.'}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
+            # Return error if no patient profile exists instead of mock data
+            return Response(
+                {'error': 'Patient profile not found. Please contact admin to set up your profile.'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
         
         if request.method == 'GET':
-            # Return patient profile data
+            # Return patient profile data with clean, empty values for unspecified fields
             profile_data = {
                 'name': f"{patient.first_name} {patient.last_name}",
                 'email': patient.email,
                 'phone': patient.phone or '',
-                'gender': patient.gender or 'Not specified',
-                'birthdate': patient.dob.strftime('%Y-%m-%d') if patient.dob else '1990-01-01',
-                'blood_type': 'O+',  # Add blood_type field to model later
+                'gender': patient.gender or '',
+                'birthdate': patient.dob.strftime('%Y-%m-%d') if patient.dob else '',
+                'blood_type': '',  # Empty until user specifies
                 'address': patient.address or '',
                 'medical_history': patient.medical_history or '',
                 'emergency_contact': {
-                    'name': 'Emergency Contact',  # Add emergency contact to model later
-                    'phone': '+123-456-7890',
-                    'relationship': 'Family'
+                    'name': '',  # Empty until user specifies
+                    'phone': '',
+                    'relationship': ''
                 }
             }
             return Response(profile_data, status=status.HTTP_200_OK)
@@ -254,17 +236,18 @@ def patient_profile(request):
                 'name': f"{patient.first_name} {patient.last_name}",
                 'email': patient.email,
                 'phone': patient.phone or '',
-                'gender': patient.gender or 'Not specified',
-                'birthdate': patient.dob.strftime('%Y-%m-%d') if patient.dob else '1990-01-01',
-                'blood_type': 'O+',
+                'gender': patient.gender or '',
+                'birthdate': patient.dob.strftime('%Y-%m-%d') if patient.dob else '',
+                'blood_type': '',  # Empty until user specifies
                 'address': patient.address or '',
                 'medical_history': patient.medical_history or '',
                 'emergency_contact': {
-                    'name': 'Emergency Contact',
-                    'phone': '+123-456-7890',
-                    'relationship': 'Family'
+                    'name': '',  # Empty until user specifies
+                    'phone': '',
+                    'relationship': ''
                 }
             }
+            return Response(updated_profile, status=status.HTTP_200_OK)
             
     except Exception as e:
         return Response(
@@ -554,7 +537,7 @@ def book_appointment(request):
         
         return Response(
             {
-                'message': 'Appointment booked successfully',
+                'message': 'Your appointment has been successfully booked. See you soon!',
                 'appointment': appointment_data
             }, 
             status=status.HTTP_201_CREATED
@@ -562,3 +545,9 @@ def book_appointment(request):
         
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def test_endpoint(request):
+    """Simple test endpoint to verify URL routing"""
+    return Response({'message': 'Test endpoint working'}, status=status.HTTP_200_OK)

@@ -122,6 +122,14 @@ export default function PatientProfile() {
         </div>
       )}
 
+      {/* Profile completion warning - show if essential fields are missing */}
+      {patient && (!patient.phone || !patient.address || !patient.birthdate || !patient.gender) && (
+        <div className={styles.warningBanner}>
+          <strong>⚠️ Please complete your profile information before booking appointments.</strong>
+          <p>Update your contact details, address, and medical history to ensure we can provide the best care.</p>
+        </div>
+      )}
+
       {/* ------ DETAILS CARDS ------ */}
       <div className={styles.cards}>
 
@@ -151,7 +159,7 @@ export default function PatientProfile() {
           ) : (
             <>
               <p><strong>Email:</strong> {patient.email}</p>
-              <p><strong>Phone:</strong> {patient.phone}</p>
+              <p><strong>Phone:</strong> {patient.phone || 'Not specified'}</p>
             </>
           )}
         </div>
@@ -167,10 +175,10 @@ export default function PatientProfile() {
                   onChange={(e) => handleInputChange('gender', e.target.value)}
                   className={styles.input}
                 >
+                  <option value="">Select gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                  <option value="Not specified">Not specified</option>
                 </select>
               </div>
               <div className={styles.formGroup}>
@@ -189,6 +197,7 @@ export default function PatientProfile() {
                   onChange={(e) => handleInputChange('blood_type', e.target.value)}
                   className={styles.input}
                 >
+                  <option value="">Select blood type</option>
                   <option value="A+">A+</option>
                   <option value="A-">A-</option>
                   <option value="B+">B+</option>
@@ -202,9 +211,9 @@ export default function PatientProfile() {
             </>
           ) : (
             <>
-              <p><strong>Gender:</strong> {patient.gender}</p>
-              <p><strong>Birthdate:</strong> {patient.birthdate}</p>
-              <p><strong>Blood Type:</strong> {patient.blood_type}</p>
+              <p><strong>Gender:</strong> {patient.gender || 'Not specified'}</p>
+              <p><strong>Birthdate:</strong> {patient.birthdate || 'Not specified'}</p>
+              <p><strong>Blood Type:</strong> {patient.blood_type || 'Not specified'}</p>
             </>
           )}
         </div>

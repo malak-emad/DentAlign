@@ -40,12 +40,30 @@ def patient_signup(request):
             with transaction.atomic():  # Ensure data consistency
                 user = serializer.save() # Create patient user
                 
+                # Auto-create patient profile with "Not specified" values
+                from staff.models import Patient
+                Patient.objects.create(
+                    user=user,
+                    first_name=user.full_name.split()[0] if user.full_name else 'Patient',
+                    last_name=user.full_name.split()[-1] if user.full_name and len(user.full_name.split()) > 1 else 'User',
+                    email=user.email,
+                    phone='',  # Empty - to be filled by user
+                    dob=None,  # Will need to be set by user
+                    gender='',  # Empty - to be filled by user
+                    address=''  # Empty - to be filled by user
+                )
+                
+                # Create authentication token for the new user
+                token, created = AuthToken.objects.get_or_create(user=user)
+                
                 # Return user data (without sensitive info)
                 user_data = UserSerializer(user).data
                 
                 return Response({
                     'message': 'Patient account created successfully',
-                    'user': user_data
+                    'user': user_data,
+                    'token': token.key,
+                    'success': True
                 }, status=status.HTTP_201_CREATED)
                 
         except Exception as e:
