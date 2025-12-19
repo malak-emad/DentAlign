@@ -78,7 +78,7 @@ export default function Login() {
           if (user.is_verified) {
             setSuccessMessage(`Welcome back, Dr. ${user.full_name}! Redirecting...`);
             setTimeout(() => {
-              navigate('/');
+              navigate('/staff/dashboard');
             }, 2000);
           } else {
             // This shouldn't happen due to backend validation, but just in case
@@ -90,17 +90,22 @@ export default function Login() {
           if (user.is_verified) {
             setSuccessMessage(`Welcome back, Nurse ${user.full_name}! Redirecting...`);
             setTimeout(() => {
-              navigate('/');
+              navigate('/staff/dashboard');
             }, 2000);
           } else {
             // This shouldn't happen due to backend validation, but just in case
             setErrors({ general: 'Account is not verified yet. Please contact administration.' });
             return;
           }
-        } else if (userRole === 'Patient' || userRole === 'Admin') {
-          // Patient or Admin: Redirect to homepage
-          const roleTitle = userRole === 'Admin' ? 'Admin' : '';
-          setSuccessMessage(`Welcome back, ${roleTitle} ${user.full_name}! Redirecting...`);
+        } else if (userRole === 'Patient') {
+          // Patient: Redirect to patient dashboard
+          setSuccessMessage(`Welcome back, ${user.full_name}! Redirecting...`);
+          setTimeout(() => {
+            navigate('/patient/dashboard');
+          }, 2000);
+        } else if (userRole === 'Admin') {
+          // Admin: Redirect to homepage
+          setSuccessMessage(`Welcome back, Admin ${user.full_name}! Redirecting...`);
           setTimeout(() => {
             navigate('/');
           }, 2000);

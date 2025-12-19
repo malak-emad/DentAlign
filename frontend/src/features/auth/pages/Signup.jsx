@@ -74,11 +74,11 @@ export default function Signup() {
         setPassword('');
         setConfirmPassword('');
         
-        console.log('✅ Patient account created, redirecting to homepage');
+        console.log('✅ Patient account created, redirecting to dashboard');
         
-        // Redirect to homepage after 2 seconds
+        // Redirect to patient dashboard after 2 seconds
         setTimeout(() => {
-          navigate('/');
+          navigate('/patient/dashboard');
         }, 2000);
         
       } else {

@@ -29,7 +29,7 @@ export default function Booking() {
   // API data state
   const [doctors, setDoctors] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
   const [bookingInProgress, setBookingInProgress] = useState(false);
   const [error, setError] = useState(null);
 
@@ -37,7 +37,7 @@ export default function Booking() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        setLoading(true);
+        setDoctorsLoading(true);
         // Don't filter by service for now - just get all doctors
         const response = await patientApi.getAvailableDoctors();
         setDoctors(response.doctors || []);
@@ -47,7 +47,7 @@ export default function Booking() {
         console.error('Error fetching doctors:', err);
         setDoctors([]); // Set empty array on error
       } finally {
-        setLoading(false);
+        setDoctorsLoading(false);
       }
     };
 
@@ -144,9 +144,9 @@ export default function Booking() {
       )}
 
       {/* Loading indicator */}
-      {loading && (
+      {doctorsLoading && (
         <div className={styles.loadingIndicator}>
-          Loading...
+          Loading doctors...
         </div>
       )}
 
@@ -156,7 +156,6 @@ export default function Booking() {
           className={`${styles.tab} ${mode === "service" ? styles.activeTab : ""}`}
           onClick={() => setMode("service")}
           aria-pressed={mode === "service"}
-          disabled={loading}
         >
           By Service
         </button>
@@ -164,7 +163,6 @@ export default function Booking() {
           className={`${styles.tab} ${mode === "doctor" ? styles.activeTab : ""}`}
           onClick={() => setMode("doctor")}
           aria-pressed={mode === "doctor"}
-          disabled={loading}
         >
           By Doctor
         </button>
@@ -190,7 +188,6 @@ export default function Booking() {
                       // No need to reset doctor since all doctors can handle all services for now
                     }}
                     aria-pressed={selected}
-                    disabled={loading}
                   >
                     <div className={styles.serviceTitle}>{s.title}</div>
                     <div className={styles.serviceSubtitle}>{s.subtitle}</div>
@@ -214,9 +211,11 @@ export default function Booking() {
                       <button
                         className={`${styles.doctorBtn} ${selectedDoctor?.id === doc.id ? styles.selectedDoctor : ""}`}
                         onClick={() => setSelectedDoctor(doc)}
-                        disabled={loading}
+                        disabled={doctorsLoading}
                       >
-                        <img src={doc.avatar} alt={doc.name} className={styles.avatar}/>
+                        <div className={styles.avatar}>
+                          {doc.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
                         <div className={styles.doctorInfo}>
                           <div className={styles.doctorName}>{doc.name}</div>
                           <div className={styles.doctorSpec}>{doc.specialty}</div>
@@ -243,9 +242,11 @@ export default function Booking() {
                             setSelectedService(SERVICES[0]);
                           }
                         }}
-                        disabled={loading}
+                        disabled={doctorsLoading}
                       >
-                        <img src={doc.avatar} alt={doc.name} className={styles.avatar}/>
+                        <div className={styles.avatar}>
+                          {doc.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
                         <div className={styles.doctorInfo}>
                           <div className={styles.doctorName}>{doc.name}</div>
                           <div className={styles.doctorSpec}>{doc.specialty}</div>
@@ -267,7 +268,6 @@ export default function Booking() {
               value={date}
               onChange={(e) => { setDate(e.target.value); setSlot(""); }}
               min={new Date().toISOString().slice(0,10)} // block past dates
-              disabled={loading}
             />
             <p className={styles.hint}>Available times will appear after you choose a date.</p>
           </div>
@@ -286,7 +286,6 @@ export default function Booking() {
                     onClick={() => setSlot(t)}
                     className={`${styles.slotBtn} ${slot === t ? styles.slotSelected : ""}`}
                     aria-pressed={slot === t}
-                    disabled={loading}
                   >
                     {t}
                   </button>
@@ -317,7 +316,7 @@ export default function Booking() {
                 {bookingInProgress ? 'Booking...' : 'Confirm Appointment'}
               </button>
 
-              <button className={styles.resetBtn} onClick={resetBooking} disabled={loading}>
+              <button className={styles.resetBtn} onClick={resetBooking}>
                 Reset
               </button>
             </div>
