@@ -323,11 +323,11 @@ export default function Booking() {
 
             {confirmed && bookingData && (
               <div className={styles.toast}>
-                <strong>✅ Confirmed!</strong>
+                <strong>Confirmed!</strong>
                 <div>Service: {bookingData.service}</div>
                 <div>Doctor: {bookingData.doctor}</div>
                 <div>Date: {bookingData.date} at {bookingData.time}</div>
-                <div className={styles.successNote}>Your appointment has been successfully booked and saved to the database!</div>
+                <div className={styles.successNote}>Your appointment has been successfully booked!</div>
               </div>
             )}
           </div>
