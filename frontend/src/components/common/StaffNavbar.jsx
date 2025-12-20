@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./StaffNavbar.module.css";
 import { Link, useLocation } from "react-router-dom";
 import menuIcon from "../../assets/icons/menu.png";
@@ -9,8 +9,23 @@ import logo from "../../assets/logos/medical-logo.png";
 export default function StaffNavbar({ onMenuToggle, unreadCount }) {
   const location = useLocation();
   const isNotificationsPage = location.pathname === "/staff/notifications";
+  const [staffName, setStaffName] = useState("Staff Member");
 
-  const staffName = "Ahmed Aly";
+  useEffect(() => {
+    // Get staff name from localStorage
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        // Use first_name and last_name from user data
+        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+        setStaffName(fullName || user.email || 'Staff Member');
+      } catch (error) {
+        console.error('Failed to parse user data:', error);
+      }
+    }
+  }, []);
+
   const initials = staffName
     .split(" ")
     .slice(0, 2)
