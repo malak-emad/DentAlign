@@ -2,82 +2,38 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import styles from "./Sidebar.module.css";
 import logo from "../../assets/logos/medical-logo.png";
+import { sidebarMenus } from "./sidebarConfig";
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar({ open, onClose, role = "staff" }) {
+  const menuItems = sidebarMenus[role] || [];
+
   return (
     <aside className={`${styles.sidebar} ${open ? styles.open : ""}`}>
       
-      {/* Header: X + logo + brand */}
+      {/* Header */}
       <div className={styles.header}>
         <button className={styles.closeBtn} onClick={onClose}>✕</button>
-
         <img src={logo} className={styles.logo} alt="Clinic Logo" />
         <span className={styles.brand}>DentAlign</span>
       </div>
 
-      <div className={styles.line}></div>
+      <div className={styles.line} />
 
-      <ul>
-        <li>
-          <NavLink 
-            to="/staff/dashboard"
-            className={({ isActive }) => isActive ? styles.active : ""}
-            onClick={onClose}
-          >
-            Dashboard
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink 
-            to="/staff/clinic-session"
-            className={({ isActive }) => isActive ? styles.active : ""}
-            onClick={onClose}
-          >
-            Clinic Session
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink 
-            to="/staff/appointments"
-            className={({ isActive }) => isActive ? styles.active : ""}
-            onClick={onClose}
-          >
-            Appointments
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink 
-            to="/staff/patients"
-            className={({ isActive }) => isActive ? styles.active : ""}
-            onClick={onClose}
-          >
-            Patients
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink 
-            to="/staff/radiology"
-            className={({ isActive }) => isActive ? styles.active : ""}
-            onClick={onClose}
-          >
-            Radiology
-          </NavLink>
-        </li>
-
-        <li>
-          <NavLink 
-            to="/staff/reports"
-            className={({ isActive }) => isActive ? styles.active : ""}
-            onClick={onClose}
-          >
-            Reports & Metrics
-          </NavLink>
-        </li>
-
+      {/* Menu */}
+      <ul className={styles.menu}>
+        {menuItems.map((item) => (
+          <li key={item.path}>
+            <NavLink
+              to={item.path}
+              className={({ isActive }) =>
+                isActive ? styles.active : undefined
+              }
+              onClick={onClose}
+            >
+              {item.label}
+            </NavLink>
+          </li>
+        ))}
       </ul>
     </aside>
   );

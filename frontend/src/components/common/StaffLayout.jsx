@@ -3,6 +3,7 @@ import StaffNavbar from "./StaffNavbar";
 import Sidebar from "./Sidebar";
 import StaffHeader from "./StaffHeader";
 import styles from "./StaffLayout.module.css";
+import { sidebarMenus} from "./sidebarConfig";
 
 export default function StaffLayout({ children }) {
   const [open, setOpen] = useState(false);
@@ -44,7 +45,7 @@ export default function StaffLayout({ children }) {
         unreadCount={unreadCount}
       />
 
-      <Sidebar open={open} onClose={() => setOpen(false)} />
+      <Sidebar open={open} onClose={() => setOpen(false)} role="staff"/>
       <StaffHeader />
 
       {/* 👇 Inject notifications into pages */}

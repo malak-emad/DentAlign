@@ -1,0 +1,143 @@
+/* ===== NAVBAR CONTAINER ===== */
+.navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+
+  background: #ffffff;
+  padding: 14px 40px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-bottom: 1px solid #e6e9ee;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* ===== LEFT SECTION (MENU + LOGO) ===== */
+.left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.menuIcon {
+  width: 26px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.menuIcon:hover {
+  opacity: 0.7;
+}
+
+.logo {
+  width: 42px;
+}
+
+.brand {
+  font-size: 21px;
+  font-weight: 700;
+  color: #0A345C;
+  letter-spacing: 0.3px;
+}
+
+/* ===== RIGHT SECTION (ICONS + PROFILE) ===== */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.bell {
+  width: 22px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.bell:hover {
+  opacity: 0.7;
+}
+
+/* ===== PROFILE DROPDOWN ===== */
+.profile {
+  position: relative;
+}
+
+.initials {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+
+  background: #0A345C;
+  color: white;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 700;
+  font-size: 15px;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.initials:hover {
+  background: #0C447A;
+}
+
+/* ===== DROPDOWN MENU ===== */
+.dropdown {
+  position: absolute;
+  top: 50px;
+  right: 0;
+
+  background: #ffffff;
+  width: 160px;
+
+  padding: 12px 0;
+  border-radius: 8px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border: 1px solid #e6e9ee;
+
+  display: none;
+  animation: fadeIn 0.25s ease;
+}
+
+.profile:hover .dropdown {
+  display: block;
+}
+
+.dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 10px 18px;
+  text-decoration: none;
+
+  color: #0A345C;
+  font-size: 15px;
+
+  transition: 0.2s ease;
+}
+
+.dropdown a:hover {
+  background: #f6f7f9;
+}
+
+/* logout icon inside dropdown */
+.logoutIcon {
+  width: 18px;
+  opacity: 0.9;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
