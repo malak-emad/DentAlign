@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'patients',
     'appointments',
     'medical',
+    'dentalign_admin',
 ]
 
 MIDDLEWARE = [

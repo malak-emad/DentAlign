@@ -38,11 +38,13 @@ export default function AppointmentsTable({ appointments, onRowClick }) {
                 <AppointmentStatusBadge status={a.status} />
               </td>
               <td>
-                {a.paid ? (
-                  <span className={styles.paid}>Paid</span>
-                ) : (
-                  <span className={styles.unpaid}>Unpaid</span>
-                )}
+                <span className={
+                  a.payment_status?.toLowerCase() === 'paid' ? styles.paid :
+                  a.payment_status?.toLowerCase() === 'pending' ? styles.pending :
+                  styles.unpaid
+                }>
+                  {a.payment_status || 'Unpaid'}
+                </span>
               </td>
             </tr>
           ))}

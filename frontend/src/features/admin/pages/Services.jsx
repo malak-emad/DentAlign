@@ -1,31 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { adminApi } from "../api/adminApi";
 import styles from "./Services.module.css";
 
-/* ===== MOCK SERVICES ===== */
-const INITIAL_SERVICES = [
-  {
-    id: 1,
-    name: "Dental Checkup",
-    price: 300,
-    active: true,
-  },
-  {
-    id: 2,
-    name: "Teeth Cleaning",
-    price: 600,
-    active: true,
-  },
-  {
-    id: 3,
-    name: "X-Ray",
-    price: 250,
-    active: false,
-  },
-];
-
 export default function Services() {
-  const [services, setServices] = useState(INITIAL_SERVICES);
+  const [services, setServices] = useState([]);
   const [newService, setNewService] = useState({ name: "", price: "" });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.getServices();
+      // Transform API data to match original UI structure
+      const transformedServices = data.services?.map(service => ({
+        id: service.id,
+        name: service.service_name,
+        price: service.price,
+        active: true, // Assuming all services from treatments are active
+        // Keep additional info for reference
+        patient_name: service.patient_name,
+        staff_name: service.staff_name,
+        date: service.date
+      })) || [];
+      setServices(transformedServices);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load services data');
+      console.error('Services error:', err);
+      // Fallback to empty array if API fails
+      setServices([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleStatus = (id) => {
     setServices((prev) =>
@@ -43,21 +55,44 @@ export default function Services() {
     );
   };
 
-  const addService = () => {
+  const addService = async () => {
     if (!newService.name || !newService.price) return;
 
-    setServices((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
+    try {
+      // Save to database via API
+      const savedService = await adminApi.addService({
         name: newService.name,
-        price: Number(newService.price),
-        active: true,
-      },
-    ]);
+        price: Number(newService.price)
+      });
 
-    setNewService({ name: "", price: "" });
+      // Add to frontend state (transform to match UI structure)
+      setServices((prev) => [
+        {
+          id: savedService.id,
+          name: savedService.service_name,
+          price: savedService.price,
+          active: true,
+        },
+        ...prev,
+      ]);
+
+      setNewService({ name: "", price: "" });
+    } catch (error) {
+      console.error('Failed to add service:', error);
+      alert('Failed to add service. Please try again.');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1>Services & Pricing</h1>
+          <p>Loading services data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -126,6 +161,13 @@ export default function Services() {
             </div>
           </div>
         ))}
+
+        {services.length === 0 && (
+          <div className={styles.emptyState}>
+            <p>No services found</p>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+          </div>
+        )}
       </div>
     </div>
   );

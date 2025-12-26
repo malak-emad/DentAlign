@@ -22,4 +22,5 @@ urlpatterns = [
     path('', include('accounts.urls')),
     path('api/staff/', include('staff.urls')),
     path('api/patients/', include('patients.urls')),
+    path('api/admin/', include('dentalign_admin.urls')),
 ]
