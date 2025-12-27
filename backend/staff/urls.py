@@ -17,13 +17,35 @@ urlpatterns = [
     
     # Appointment endpoints
     path('appointments/', views.AppointmentListView.as_view(), name='appointment_list'),
+    path('appointments/<uuid:appointment_id>/', views.AppointmentDetailView.as_view(), name='appointment_detail'),
     
     # Treatment endpoints
     path('treatments/', views.TreatmentListView.as_view(), name='treatment_list'),
+    
+    # Medical record endpoints
+    path('medical-records/', views.MedicalRecordListView.as_view(), name='medical_record_list'),
+    
+    # Diagnosis endpoints
+    path('diagnoses/', views.DiagnosisListView.as_view(), name='diagnosis_list'),
+    
+    # Medical record endpoints
+    path('medical-records/', views.MedicalRecordListView.as_view(), name='medical_record_list'),
+    
+    # Diagnosis endpoints
+    path('diagnoses/', views.DiagnosisListView.as_view(), name='diagnosis_list'),
+    
+    # Medical record endpoints
+    path('medical-records/', views.MedicalRecordListView.as_view(), name='medical_record_list'),
+    
+    # Diagnosis endpoints
+    path('diagnoses/', views.DiagnosisListView.as_view(), name='diagnosis_list'),
     
     # Invoice endpoints
     path('invoices/', views.InvoiceListView.as_view(), name='invoice_list'),
     
     # Payment endpoints
     path('payments/', views.PaymentListView.as_view(), name='payment_list'),
+    
+    # Service endpoints
+    path('services/', views.ServiceListView.as_view(), name='service_list'),
 ]

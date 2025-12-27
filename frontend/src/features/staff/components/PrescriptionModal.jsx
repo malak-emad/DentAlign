@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import styles from "./PrescriptionModal.module.css";
 import ServiceSelector from "./ServiceSelector";
+import { staffApi } from "../api/staffApi";
 
 export default function PrescriptionModal({ patient, duration, onClose }) {
   const [notes, setNotes] = useState("");
   const [radiology, setRadiology] = useState("no");
   const [medications, setMedications] = useState([""]);
+  const [selectedServices, setSelectedServices] = useState([]);
 
   const addMedication = () => {
     setMedications((prev) => [...prev, ""]);
@@ -17,16 +19,48 @@ export default function PrescriptionModal({ patient, duration, onClose }) {
     );
   };
 
-  const submit = () => {
-    console.log({
-      patient,
-      duration,
-      services: "from ServiceSelector",
-      medications,
-      radiology,
-      notes
-    });
-    onClose();
+  const handleServiceSelection = (services) => {
+    setSelectedServices(services);
+  };
+
+  const submit = async () => {
+    try {
+      // 1. Create treatments for selected services
+      for (const serviceId of selectedServices) {
+        await staffApi.createTreatment({
+          appointment: patient.raw.appointment_id,
+          service: serviceId,
+          actual_cost: null, // Use default price
+        });
+      }
+
+      // 2. Create medical record
+      const medicalRecord = await staffApi.createMedicalRecord({
+        patient: patient.raw.patient,
+        created_by: patient.raw.staff,
+        notes: notes,
+      });
+
+      // 3. Update appointment to link the medical record
+      await staffApi.updateAppointment(patient.raw.appointment_id, {
+        medical_record: medicalRecord.record_id,
+      });
+
+      // 4. Create diagnoses for medications
+      for (const medication of medications.filter(m => m.trim())) {
+        await staffApi.createDiagnosis({
+          record: medicalRecord.record_id,
+          notes: medication,
+        });
+      }
+
+      console.log('Prescription saved successfully');
+      onClose();
+    } catch (error) {
+      console.error('Failed to save prescription:', error);
+      // Still close for now
+      onClose();
+    }
   };
 
   return (
@@ -43,7 +77,7 @@ export default function PrescriptionModal({ patient, duration, onClose }) {
         {/* SERVICES */}
         <div className={styles.section}>
           <h4>Services Performed</h4>
-          <ServiceSelector />
+          <ServiceSelector onSelectionChange={handleServiceSelection} />
         </div>
 
         {/* MEDICATIONS */}

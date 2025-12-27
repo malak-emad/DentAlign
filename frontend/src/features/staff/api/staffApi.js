@@ -27,14 +27,20 @@ const makeAuthenticatedRequest = async (url, options = {}) => {
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
-      throw new Error('Authentication failed');
+    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      errorMessage += ` - ${JSON.stringify(errorData)}`;
+    } catch (e) {
+      // If not JSON, try text
+      try {
+        const errorText = await response.text();
+        errorMessage += ` - ${errorText}`;
+      } catch (e2) {
+        // Ignore
+      }
     }
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -121,6 +127,18 @@ export const staffApi = {
     }
   },
 
+  updateAppointment: async (appointmentId, updateData) => {
+    try {
+      return await makeAuthenticatedRequest(`/appointments/${appointmentId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateData),
+      });
+    } catch (error) {
+      console.error('Failed to update appointment:', error);
+      throw error;
+    }
+  },
+
   // Get current staff profile
   getProfile: async () => {
     try {
@@ -140,6 +158,70 @@ export const staffApi = {
       return await makeAuthenticatedRequest(`/treatments/${queryString}`);
     } catch (error) {
       console.error('Failed to fetch treatments:', error);
+      throw error;
+    }
+  },
+
+  createTreatment: async (treatmentData) => {
+    try {
+      return await makeAuthenticatedRequest('/treatments/', {
+        method: 'POST',
+        body: JSON.stringify(treatmentData),
+      });
+    } catch (error) {
+      console.error('Failed to create treatment:', error);
+      throw error;
+    }
+  },
+
+  // Medical record APIs
+  createMedicalRecord: async (recordData) => {
+    try {
+      return await makeAuthenticatedRequest('/medical-records/', {
+        method: 'POST',
+        body: JSON.stringify(recordData),
+      });
+    } catch (error) {
+      console.error('Failed to create medical record:', error);
+      throw error;
+    }
+  },
+
+  // Diagnosis APIs
+  createDiagnosis: async (diagnosisData) => {
+    try {
+      return await makeAuthenticatedRequest('/diagnoses/', {
+        method: 'POST',
+        body: JSON.stringify(diagnosisData),
+      });
+    } catch (error) {
+      console.error('Failed to create diagnosis:', error);
+      throw error;
+    }
+  },
+
+  // Medical record APIs
+  createMedicalRecord: async (recordData) => {
+    try {
+      return await makeAuthenticatedRequest('/medical-records/', {
+        method: 'POST',
+        body: JSON.stringify(recordData),
+      });
+    } catch (error) {
+      console.error('Failed to create medical record:', error);
+      throw error;
+    }
+  },
+
+  // Diagnosis APIs
+  createDiagnosis: async (diagnosisData) => {
+    try {
+      return await makeAuthenticatedRequest('/diagnoses/', {
+        method: 'POST',
+        body: JSON.stringify(diagnosisData),
+      });
+    } catch (error) {
+      console.error('Failed to create diagnosis:', error);
       throw error;
     }
   },
@@ -166,6 +248,18 @@ export const staffApi = {
       return await makeAuthenticatedRequest(`/payments/${queryString}`);
     } catch (error) {
       console.error('Failed to fetch payments:', error);
+      throw error;
+    }
+  },
+
+  // Service APIs
+  getServices: async () => {
+    try {
+      const response = await makeAuthenticatedRequest('/services/');
+      // Handle both direct array and paginated { results: [...] }
+      return Array.isArray(response) ? response : (response.results || []);
+    } catch (error) {
+      console.error('Failed to fetch services:', error);
       throw error;
     }
   },

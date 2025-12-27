@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from .permissions import IsDoctorOnly, IsDoctorOrStaff
 
-from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment
+from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment, Service
 from .serializers import (
     PatientSerializer, PatientListSerializer,
     StaffSerializer,
@@ -17,7 +17,8 @@ from .serializers import (
     TreatmentSerializer, TreatmentSummarySerializer,
     DiagnosisSerializer,
     InvoiceSerializer, InvoiceSummarySerializer,
-    PaymentSerializer
+    PaymentSerializer,
+    ServiceSerializer
 )
 
 
@@ -160,6 +161,14 @@ class AppointmentListView(generics.ListAPIView):
         return queryset.order_by('start_time')
 
 
+class AppointmentDetailView(generics.RetrieveUpdateAPIView):
+    """Retrieve and update appointment details"""
+    queryset = Appointment.objects.all()
+    serializer_class = AppointmentSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'appointment_id'
+
+
 class TreatmentListView(generics.ListCreateAPIView):
     """List and create treatments"""
     queryset = Treatment.objects.all()
@@ -177,6 +186,44 @@ class TreatmentListView(generics.ListCreateAPIView):
             queryset = queryset.filter(appointment__appointment_id=appointment_id)
 
         return queryset.order_by('-created_at')
+
+
+class MedicalRecordListView(generics.ListCreateAPIView):
+    """List and create medical records"""
+    queryset = MedicalRecord.objects.all()
+    serializer_class = MedicalRecordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        patient_id = self.request.query_params.get('patient_id', None)
+        appointment_id = self.request.query_params.get('appointment_id', None)
+
+        if patient_id:
+            queryset = queryset.filter(patient__patient_id=patient_id)
+        if appointment_id:
+            queryset = queryset.filter(appointment__appointment_id=appointment_id)
+
+        return queryset.order_by('-record_date')
+
+
+class DiagnosisListView(generics.ListCreateAPIView):
+    """List and create diagnoses"""
+    queryset = Diagnosis.objects.all()
+    serializer_class = DiagnosisSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        record_id = self.request.query_params.get('record_id', None)
+        patient_id = self.request.query_params.get('patient_id', None)
+
+        if record_id:
+            queryset = queryset.filter(record__record_id=record_id)
+        if patient_id:
+            queryset = queryset.filter(record__patient__patient_id=patient_id)
+
+        return queryset.order_by('-diagnosed_at')
 
 
 class InvoiceListView(generics.ListCreateAPIView):
@@ -218,6 +265,13 @@ class PaymentListView(generics.ListCreateAPIView):
             queryset = queryset.filter(invoice__patient__patient_id=patient_id)
 
         return queryset.order_by('-paid_at')
+
+
+class ServiceListView(generics.ListAPIView):
+    """List available services"""
+    queryset = Service.objects.filter(is_active=True)
+    serializer_class = ServiceSerializer
+    permission_classes = [IsAuthenticated]
 
 
 @api_view(['GET'])

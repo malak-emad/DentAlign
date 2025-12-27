@@ -29,11 +29,11 @@ class AppointmentAdmin(admin.ModelAdmin):
 
 @admin.register(MedicalRecord)
 class MedicalRecordAdmin(admin.ModelAdmin):
-    list_display = ('patient', 'staff', 'record_date', 'chief_complaint')
-    list_filter = ('record_date', 'staff')
-    search_fields = ('patient__first_name', 'patient__last_name', 'chief_complaint')
-    readonly_fields = ('record_id', 'created_at', 'updated_at')
-    date_hierarchy = 'record_date'
+    list_display = ('patient', 'created_by', 'created_at', 'notes')
+    list_filter = ('created_at', 'created_by')
+    search_fields = ('patient__first_name', 'patient__last_name', 'notes')
+    readonly_fields = ('record_id', 'created_at')
+    date_hierarchy = 'created_at'
 
 
 @admin.register(Treatment)
