@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment
+from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment, Service
 
 
 @admin.register(Patient)
@@ -38,9 +38,9 @@ class MedicalRecordAdmin(admin.ModelAdmin):
 
 @admin.register(Treatment)
 class TreatmentAdmin(admin.ModelAdmin):
-    list_display = ('treatment_id', 'appointment', 'treatment_code', 'description', 'cost', 'created_at')
-    list_filter = ('created_at', 'treatment_code')
-    search_fields = ('treatment_code', 'description', 'appointment__patient__first_name', 'appointment__patient__last_name')
+    list_display = ('treatment_id', 'appointment', 'service', 'actual_cost', 'created_at')
+    list_filter = ('created_at', 'service')
+    search_fields = ('service__name', 'appointment__patient__first_name', 'appointment__patient__last_name')
     readonly_fields = ('treatment_id',)
     date_hierarchy = 'created_at'
 
@@ -68,5 +68,12 @@ class PaymentAdmin(admin.ModelAdmin):
     list_display = ('payment_id', 'invoice', 'amount', 'method', 'paid_at')
     list_filter = ('method', 'paid_at')
     search_fields = ('invoice__patient__first_name', 'invoice__patient__last_name')
-    readonly_fields = ('payment_id',)
-    date_hierarchy = 'paid_at'
+
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ('name', 'price', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('name', 'description')
+    readonly_fields = ('service_id', 'created_at', 'updated_at')
+    date_hierarchy = 'created_at'

@@ -31,4 +31,6 @@ urlpatterns = [
     path('invoices/<str:invoice_id>/approve/', views.approve_invoice, name='approve_invoice'),
     path('invoices/<str:invoice_id>/reject/', views.reject_invoice, name='reject_invoice'),
     path('invoices/<str:invoice_id>/payment/', views.update_payment_status, name='update_payment_status'),
+    # Reports
+    path('reports/', views.reports_data, name='reports_data'),
 ]

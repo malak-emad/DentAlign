@@ -149,7 +149,10 @@ export async function login(loginData) {
   if (result.success && result.data.token) {
     localStorage.setItem('token', result.data.token);
     localStorage.setItem('user', JSON.stringify(result.data.user));
-    console.log('🔐 Token stored successfully');
+    if (result.data.user.staff_id) {
+      localStorage.setItem('staff_id', result.data.user.staff_id);
+    }
+    console.log('🔐 Token and user data stored successfully');
   }
   
   return result;

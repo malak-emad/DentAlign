@@ -108,8 +108,9 @@ class AppointmentListView(generics.ListAPIView):
         date = self.request.query_params.get('date', None)
         date_gte = self.request.query_params.get('date_gte', None)  # Start date for ranges
         date_lte = self.request.query_params.get('date_lte', None)  # End date for ranges
+        start_time_gte = self.request.query_params.get('start_time__gte', None)
         status_filter = self.request.query_params.get('status', None)
-        staff_id = self.request.query_params.get('staff_id', None)
+        staff_id = self.request.query_params.get('staff', None)
 
         if date:
             try:
@@ -132,11 +133,29 @@ class AppointmentListView(generics.ListAPIView):
             except ValueError:
                 pass
 
+        if start_time_gte:
+            try:
+                start_datetime = datetime.fromisoformat(start_time_gte.replace('Z', '+00:00'))
+                queryset = queryset.filter(
+                    Q(start_time__gte=start_datetime) | 
+                    Q(appointment_date__gte=start_datetime, start_time__isnull=True)
+                )
+            except ValueError:
+                pass
+
         if status_filter:
             queryset = queryset.filter(status=status_filter)
 
-        if staff_id:
-            queryset = queryset.filter(staff__staff_id=staff_id)
+        # Handle staff filter robustly: ignore 'null'/'undefined' strings, support UUID or username/email
+        if staff_id and staff_id not in ('null', 'undefined', ''):
+            # First try treating it as a UUID (staff.staff_id)
+            try:
+                import uuid as _uuid
+                _uuid.UUID(staff_id)
+                queryset = queryset.filter(staff__staff_id=staff_id)
+            except Exception:
+                # Fall back to username or email on the related user
+                queryset = queryset.filter(Q(staff__user__username=staff_id) | Q(staff__user__email=staff_id))
 
         return queryset.order_by('start_time')
 
@@ -225,7 +244,7 @@ def dashboard_stats(request):
             'this_month': Treatment.objects.filter(created_at__date__gte=this_month).count(),
             'total_revenue': Treatment.objects.filter(
                 created_at__date__gte=this_month
-            ).aggregate(total=Sum('cost'))['total'] or 0,
+            ).aggregate(total=Sum('actual_cost'))['total'] or 0,
         },
         'invoices': {
             'pending': Invoice.objects.filter(status='pending').count(),

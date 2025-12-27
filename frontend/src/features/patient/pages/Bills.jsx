@@ -1,48 +1,43 @@
 // src/features/patient/pages/Bills.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { patientApi } from "../api/patientApi";
 import styles from "./Bills.module.css";
 
-const MOCK_BILLS = [
-  {
-    id: "b1",
-    title: "Dental Cleaning",
-    doctor: "Dr. Omar Khaled",
-    date: "2026-01-15",
-    status: "Paid",
-    total: 450,
-    items: [
-      { name: "Scaling", price: 300 },
-      { name: "Polishing", price: 150 },
-    ],
-  },
-  {
-    id: "b2",
-    title: "Tooth Extraction",
-    doctor: "Dr. Sarah Ahmed",
-    date: "2025-12-02",
-    status: "Unpaid",
-    total: 900,
-    items: [{ name: "Extraction", price: 900 }],
-  },
-  {
-    id: "b3",
-    title: "Chest X‑Ray",
-    doctor: "Dr. Lina Hassan",
-    date: "2025-10-10",
-    status: "Paid",
-    total: 300,
-    items: [{ name: "X‑Ray Scan", price: 300 }],
-  },
-];
-
 export default function Bills() {
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
 
-  const filteredBills = useMemo(() => {
-    return MOCK_BILLS.filter((b) => {
-      if (statusFilter && b.status !== statusFilter) return false;
+  useEffect(() => {
+    fetchBills();
+  }, []);
 
+  const fetchBills = async () => {
+    try {
+      setLoading(true);
+      const data = await patientApi.getInvoices();
+      setBills(data.bills || []);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching bills:', err);
+      setError('Failed to load bills. Please try again.');
+      setBills([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredBills = useMemo(() => {
+    return bills.filter((b) => {
+      // Status filter: map "Paid"/"Unpaid" to match status values
+      if (statusFilter) {
+        if (statusFilter === "Paid" && b.status !== "Paid") return false;
+        if (statusFilter === "Unpaid" && b.status === "Paid") return false;
+      }
+
+      // Search filter
       if (search) {
         const q = search.toLowerCase();
         if (
@@ -54,16 +49,35 @@ export default function Bills() {
 
       return true;
     });
-  }, [statusFilter, search]);
+  }, [bills, statusFilter, search]);
 
-  // Mock handlers
   const handleView = (bill) => {
+    // TODO: Implement view bill details modal/page
     alert("Viewing bill: " + bill.title);
   };
 
   const handleDownload = (bill) => {
+    // TODO: Implement PDF download
     alert("Downloading PDF for " + bill.title);
   };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Bills & Payments</h1>
+        <p>Loading bills...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Bills & Payments</h1>
+        <p style={{ color: 'red' }}>{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>

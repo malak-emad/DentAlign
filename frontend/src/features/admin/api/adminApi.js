@@ -190,6 +190,15 @@ class AdminApi {
       throw error;
     }
   }
+
+  async getReports() {
+    try {
+      return await makeAuthenticatedRequest('/reports/');
+    } catch (error) {
+      console.error('Error fetching reports data:', error);
+      throw error;
+    }
+  }
 }
 
 export const adminApi = new AdminApi();

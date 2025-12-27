@@ -5,11 +5,11 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.utils import timezone
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, Avg
 from datetime import datetime, timedelta
 
 # Import models from staff app (where the real models are defined)
-from staff.models import Patient, Staff, Appointment, Treatment, Invoice, Payment
+from staff.models import Patient, Staff, Appointment, Treatment, Invoice, Payment, Service
 
 # Create your views here.
 
@@ -111,36 +111,35 @@ def dashboard_stats(request):
 @permission_classes([IsAuthenticated])
 def services_list(request):
     """
-    API endpoint for admin services list - from treatments table
+    API endpoint for admin services list - from services_available table (catalog of available services)
     """
     try:
-        # Get all treatments with service name from description and price from cost
-        # Order by newest first (most recently created)
-        treatments = Treatment.objects.all().order_by('-created_at')
+        # Get all available services from the services catalog
+        services = Service.objects.all().order_by('name')
         
         services_data = []
-        for treatment in treatments:
-            service = {
-                'id': treatment.treatment_id,
-                'service_name': treatment.description or 'Unnamed Service',
-                'price': float(treatment.cost) if treatment.cost else 0.0,
-                'patient_name': f"{treatment.patient.first_name} {treatment.patient.last_name}" if treatment.patient else 'Unknown Patient',
-                'staff_name': f"Dr. {treatment.staff.first_name} {treatment.staff.last_name}" if treatment.staff else 'Unknown Staff',
-                'date': treatment.created_at.strftime('%Y-%m-%d') if treatment.created_at else 'Unknown Date',
-                'status': getattr(treatment, 'status', 'Completed')
+        for service in services:
+            service_data = {
+                'id': str(service.service_id),
+                'service_name': service.name,
+                'price': float(service.price),
+                'description': service.description or '',
+                'is_active': service.is_active,
+                'date': service.created_at.strftime('%Y-%m-%d') if service.created_at else '',
+                'status': 'Active' if service.is_active else 'Inactive'
             }
-            services_data.append(service)
+            services_data.append(service_data)
         
         # Get some summary stats
         total_services = len(services_data)
-        total_revenue = sum(service['price'] for service in services_data)
-        avg_price = total_revenue / total_services if total_services > 0 else 0
+        active_services = len([s for s in services_data if s['is_active']])
+        avg_price = sum(s['price'] for s in services_data) / total_services if total_services > 0 else 0
         
         response_data = {
             'services': services_data,
             'summary': {
                 'total_services': total_services,
-                'total_revenue': total_revenue,
+                'active_services': active_services,
                 'average_price': round(avg_price, 2)
             }
         }
@@ -157,11 +156,12 @@ def services_list(request):
 @permission_classes([IsAuthenticated])
 def add_service(request):
     """
-    API endpoint to add a new service - saves to treatments table
+    API endpoint to add a new service - saves to services_available table (catalog)
     """
     try:
         service_name = request.data.get('name')
         price = request.data.get('price')
+        description = request.data.get('description', '')
         
         if not service_name or price is None:
             return Response(
@@ -169,46 +169,34 @@ def add_service(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # For now, let's create a dummy appointment to satisfy the foreign key
-        # This is a template service, not a real treatment
-        try:
-            # Try to find an existing appointment to use as template
-            template_appointment = Appointment.objects.first()
-            
-            if not template_appointment:
-                return Response(
-                    {'error': 'No appointments found. Cannot create service template.'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
-            # Create a new treatment record to represent this service
-            new_treatment = Treatment(
-                appointment_id=template_appointment.appointment_id,  # Use appointment_id field
-                description=service_name,          # service name goes in description
-                cost=float(price),                # price goes in cost
-                treatment_code=f"SRV-{timezone.now().strftime('%Y%m%d%H%M%S')}", # Generate code
-                created_at=timezone.now()
-            )
-            new_treatment.save()
-            
-            # Return the created service data
-            service_data = {
-                'id': str(new_treatment.treatment_id),
-                'service_name': new_treatment.description,
-                'price': float(new_treatment.cost),
-                'patient_name': f"{template_appointment.patient.first_name} {template_appointment.patient.last_name}" if template_appointment.patient else 'Template',
-                'staff_name': f"Dr. {template_appointment.staff.first_name} {template_appointment.staff.last_name}" if template_appointment.staff else 'Admin',
-                'date': new_treatment.created_at.strftime('%Y-%m-%d'),
-                'status': 'Active'
-            }
-            
-            return Response(service_data, status=status.HTTP_201_CREATED)
-            
-        except Exception as db_error:
+        # Check if service with same name already exists
+        if Service.objects.filter(name=service_name).exists():
             return Response(
-                {'error': f'Database error: {str(db_error)}'}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {'error': f'Service "{service_name}" already exists'}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
+        
+        # Create a new service in the catalog
+        new_service = Service(
+            name=service_name,
+            price=float(price),
+            description=description,
+            is_active=True
+        )
+        new_service.save()
+        
+        # Return the created service data
+        service_data = {
+            'id': str(new_service.service_id),
+            'service_name': new_service.name,
+            'price': float(new_service.price),
+            'description': new_service.description or '',
+            'is_active': new_service.is_active,
+            'date': new_service.created_at.strftime('%Y-%m-%d'),
+            'status': 'Active'
+        }
+        
+        return Response(service_data, status=status.HTTP_201_CREATED)
         
     except Exception as e:
         return Response(
@@ -628,33 +616,49 @@ def invoices_list(request):
     API endpoint for admin invoices - invoices pending approval (is_approved IS NULL)
     """
     try:
-        # Get invoices pending approval with related data
-        invoices = Invoice.objects.filter(is_approved__isnull=True).select_related('patient', 'appointment', 'appointment__staff').order_by('-created_at')
+        # Get invoices pending approval with related data and prefetch treatments
+        invoices = Invoice.objects.filter(is_approved__isnull=True).select_related(
+            'patient', 'appointment', 'appointment__patient', 'appointment__staff'
+        ).prefetch_related('appointment__treatments').order_by('-created_at')
         
         invoices_data = []
         for invoice in invoices:
             # Get services from appointment or default
             services = []
+            calculated_total = 0.0
             if invoice.appointment:
-                appointment_treatments = Treatment.objects.filter(appointment=invoice.appointment)
-                if appointment_treatments.exists():
+                # IMPORTANT: Get treatments ONLY for this specific appointment
+                # Use explicit filter with select_related to get service details
+                appointment_treatments = list(Treatment.objects.filter(
+                    appointment_id=invoice.appointment.appointment_id
+                ).select_related('service').order_by('created_at'))
+                
+                # Debug: Log what we're getting
+                print(f"DEBUG Invoice {invoice.invoice_id}: Patient {invoice.patient.full_name}, Appointment {invoice.appointment.appointment_id}")
+                print(f"DEBUG Found {len(appointment_treatments)} treatments:")
+                for t in appointment_treatments:
+                    service_name = t.service.name if t.service else 'Unknown Service'
+                    cost = float(t.cost) if t.cost else 0
+                    print(f"  - {service_name} (cost: {cost}, appointment_id: {t.appointment.appointment_id})")
+                
+                if appointment_treatments:
                     services = [
                         {
-                            'name': t.description or 'General Treatment',
-                            'price': float(t.cost or 0)
+                            'name': t.service.name if t.service else 'Unknown Service',
+                            'price': float(t.cost) if t.cost else 0
                         }
                         for t in appointment_treatments
                     ]
+                    # Calculate total from all treatments in the appointment
+                    calculated_total = sum(float(t.cost) if t.cost else 0 for t in appointment_treatments)
                 else:
-                    services = [{
-                        'name': 'General Consultation',
-                        'price': float(invoice.total_amount or 0)
-                    }]
+                    # No treatments found for this appointment - return empty services
+                    services = []
+                    calculated_total = 0.0
             else:
-                services = [{
-                    'name': 'General Service',
-                    'price': float(invoice.total_amount or 0)
-                }]
+                # No appointment linked - return empty services
+                services = []
+                calculated_total = 0.0
             
             # Determine approval status
             approval_status = 'pending'
@@ -669,7 +673,7 @@ def invoices_list(request):
                 'patient': invoice.patient.full_name,
                 'doctor': f"Dr. {invoice.appointment.staff.first_name} {invoice.appointment.staff.last_name}" if invoice.appointment and invoice.appointment.staff else 'N/A',
                 'date': invoice.issued_date.strftime('%Y-%m-%d'),
-                'total': float(invoice.total_amount),
+                'total': calculated_total,  # Use calculated total from treatments
                 'status': approval_status,
                 'appointmentStatus': appointment_status,
                 'services': services
@@ -692,40 +696,56 @@ def billing_list(request):
     API endpoint for admin billing - approved invoices only (is_approved=True)
     """
     try:
-        # Get approved invoices with related data
-        invoices = Invoice.objects.filter(is_approved=True).select_related('patient', 'appointment', 'appointment__staff').order_by('-created_at')
+        # Get approved invoices with related data and prefetch treatments
+        invoices = Invoice.objects.filter(is_approved=True).select_related(
+            'patient', 'appointment', 'appointment__patient', 'appointment__staff'
+        ).prefetch_related('appointment__treatments').order_by('-created_at')
         
         invoices_data = []
         for invoice in invoices:
             # Get services from appointment or default
             services = []
+            calculated_total = 0.0
             if invoice.appointment:
-                appointment_treatments = Treatment.objects.filter(appointment=invoice.appointment)
-                if appointment_treatments.exists():
+                # IMPORTANT: Get treatments ONLY for this specific appointment
+                # Use explicit filter with select_related to get service details
+                appointment_treatments = list(Treatment.objects.filter(
+                    appointment_id=invoice.appointment.appointment_id
+                ).select_related('service').order_by('created_at'))
+                
+                # Debug: Log what we're getting
+                print(f"DEBUG Invoice {invoice.invoice_id}: Patient {invoice.patient.full_name}, Appointment {invoice.appointment.appointment_id}")
+                print(f"DEBUG Found {len(appointment_treatments)} treatments:")
+                for t in appointment_treatments:
+                    service_name = t.service.name if t.service else 'Unknown Service'
+                    cost = float(t.cost) if t.cost else 0
+                    print(f"  - {service_name} (cost: {cost}, appointment_id: {t.appointment.appointment_id})")
+                
+                if appointment_treatments:
                     services = [
                         {
-                            'name': t.description or 'General Treatment',
-                            'price': float(t.cost or 0)
+                            'name': t.service.name if t.service else 'Unknown Service',
+                            'price': float(t.cost) if t.cost else 0
                         }
                         for t in appointment_treatments
                     ]
+                    # Calculate total from all treatments in the appointment
+                    calculated_total = sum(float(t.cost) if t.cost else 0 for t in appointment_treatments)
                 else:
-                    services = [{
-                        'name': 'General Consultation',
-                        'price': float(invoice.total_amount or 0)
-                    }]
+                    # No treatments found for this appointment - return empty services
+                    services = []
+                    calculated_total = 0.0
             else:
-                services = [{
-                    'name': 'General Service',
-                    'price': float(invoice.total_amount or 0)
-                }]
+                # No appointment linked - return empty services
+                services = []
+                calculated_total = 0.0
             
             invoice_data = {
                 'id': str(invoice.invoice_id),
                 'patient': invoice.patient.full_name,
                 'doctor': f"Dr. {invoice.appointment.staff.first_name} {invoice.appointment.staff.last_name}" if invoice.appointment and invoice.appointment.staff else 'N/A',
                 'date': invoice.issued_date.strftime('%Y-%m-%d'),
-                'total': float(invoice.total_amount),
+                'total': calculated_total,  # Use calculated total from treatments
                 'status': 'approved',  # all billing items are approved
                 'paymentStatus': invoice.status,  # payment status
                 'services': services
@@ -827,5 +847,135 @@ def update_payment_status(request, invoice_id):
     except Exception as e:
         return Response(
             {'error': f'Update payment status error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def reports_data(request):
+    """
+    API endpoint for admin reports - comprehensive clinic performance metrics
+    """
+    try:
+        today = timezone.now().date()
+        this_month_start = timezone.now().replace(day=1).date()
+        
+        # ===== METRICS =====
+        # Total Revenue: Sum of ALL paid_amount values from invoices table (includes partially paid)
+        total_revenue = Invoice.objects.aggregate(
+            total=Sum('paid_amount')
+        )['total'] or 0
+        total_revenue = float(total_revenue)
+        
+        # Paid Invoices: Count of invoices where status = 'paid'
+        paid_invoices = Invoice.objects.filter(status='paid').count()
+        
+        # Unpaid Invoices: Count of invoices where status != 'paid' (includes 'Partially', 'unpaid', etc.)
+        unpaid_invoices = Invoice.objects.exclude(status='paid').count()
+        
+        # Total Visits: Count of appointments where status = 'completed'
+        total_visits = Appointment.objects.filter(status='completed').count()
+        
+        # Active Doctors: Count of staff where role_title contains 'Doctor' or 'Dentist'
+        active_doctors = Staff.objects.filter(
+            role_title__iregex=r'(Doctor|Dentist|Orthodontist)'
+        ).count()
+        
+        # ===== REVENUE OVERVIEW =====
+        # Today Revenue: Sum of ALL paid_amount from invoices where issued_date = today
+        today_revenue = Invoice.objects.filter(
+            issued_date=today
+        ).aggregate(total=Sum('paid_amount'))['total'] or 0
+        today_revenue = float(today_revenue)
+        
+        # This Month Revenue: Sum of ALL paid_amount from invoices where issued_date >= this_month_start
+        month_revenue = Invoice.objects.filter(
+            issued_date__gte=this_month_start
+        ).aggregate(total=Sum('paid_amount'))['total'] or 0
+        month_revenue = float(month_revenue)
+        
+        # Average Invoice: Average of total_amount from all invoices
+        avg_invoice = Invoice.objects.aggregate(
+            avg=Avg('total_amount')
+        )['avg'] or 0
+        avg_invoice = float(avg_invoice)
+        
+        # ===== INVOICE STATUS =====
+        # Pending: Count where is_approved IS NULL
+        pending_invoices = Invoice.objects.filter(is_approved__isnull=True).count()
+        
+        # Approved: Count where is_approved = True
+        approved_invoices = Invoice.objects.filter(is_approved=True).count()
+        
+        # Paid: Count where status = 'paid'
+        paid_invoices_count = Invoice.objects.filter(status='paid').count()
+        
+        # Unpaid: Count where status != 'paid' (includes 'Partially', 'unpaid', etc.)
+        unpaid_invoices_count = Invoice.objects.exclude(status='paid').count()
+        
+        # ===== DOCTOR PERFORMANCE =====
+        # Get all doctors
+        doctors = Staff.objects.filter(
+            role_title__iregex=r'(Doctor|Dentist|Orthodontist)'
+        ).select_related('user')
+        
+        doctor_stats = []
+        for doctor in doctors:
+            # Doctor name
+            doctor_name = f"Dr. {doctor.first_name or ''} {doctor.last_name or ''}".strip()
+            if not doctor_name or doctor_name == 'Dr.':
+                doctor_name = f"Dr. {doctor.user.full_name}" if doctor.user else f"Dr. {doctor.staff_id}"
+            
+            # Visits: Count of appointments where staff_id = doctor.staff_id AND status = 'completed'
+            visits = Appointment.objects.filter(
+                staff=doctor,
+                status='completed'
+            ).count()
+            
+            # Revenue: Sum of ALL invoice.paid_amount for invoices linked to appointments where staff_id = doctor.staff_id
+            doctor_appointments = Appointment.objects.filter(staff=doctor)
+            doctor_revenue = Invoice.objects.filter(
+                appointment__in=doctor_appointments
+            ).aggregate(total=Sum('paid_amount'))['total'] or 0
+            doctor_revenue = float(doctor_revenue)
+            
+            doctor_stats.append({
+                'name': doctor_name,
+                'visits': visits,
+                'revenue': doctor_revenue
+            })
+        
+        # Sort by revenue descending
+        doctor_stats.sort(key=lambda x: x['revenue'], reverse=True)
+        
+        # Build response
+        response_data = {
+            'metrics': {
+                'totalRevenue': total_revenue,
+                'paidInvoices': paid_invoices,
+                'unpaidInvoices': unpaid_invoices,
+                'totalVisits': total_visits,
+                'activeDoctors': active_doctors
+            },
+            'revenue': {
+                'today': today_revenue,
+                'month': month_revenue,
+                'avgInvoice': avg_invoice
+            },
+            'invoiceStats': [
+                {'label': 'Pending', 'value': pending_invoices},
+                {'label': 'Approved', 'value': approved_invoices},
+                {'label': 'Paid', 'value': paid_invoices_count},
+                {'label': 'Unpaid', 'value': unpaid_invoices_count}
+            ],
+            'doctorStats': doctor_stats
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Reports error: {str(e)}'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

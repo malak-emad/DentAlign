@@ -72,9 +72,12 @@ class Appointment(models.Model):
 
     appointment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
-    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='appointments')
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='appointments', db_column='staff_id')
     start_time = models.DateTimeField(default=timezone.now)
     end_time = models.DateTimeField(default=timezone.now()+timezone.timedelta(hours=1))
+    appointment_date = models.DateTimeField(blank=True, null=True, help_text="Actual date/time of appointment session, can differ from scheduled start_time.")
+    nurse = models.ForeignKey('Staff', on_delete=models.SET_NULL, related_name='nurse_appointments', blank=True, null=True, help_text="Nurse assisting in the appointment.", db_column='nurse_id')
+    medical_record = models.OneToOneField('MedicalRecord', on_delete=models.SET_NULL, blank=True, null=True, related_name='appointment_record', help_text="Medical record for this appointment.")
     fee = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     reason = models.TextField(blank=True, null=True)
@@ -87,10 +90,7 @@ class Appointment(models.Model):
     def __str__(self):
         return f"{self.patient.full_name} - {self.start_time}"
     
-    @property
-    def appointment_date(self):
-        """Return the date part of start_time for backwards compatibility"""
-        return self.start_time.date()
+
     
     @property
     def appointment_time(self):
@@ -122,19 +122,22 @@ class MedicalRecord(models.Model):
 
 
 class Treatment(models.Model):
-    """Model mapping to existing treatments table"""
+    """
+    Model for actual treatments performed during appointments
+    References Service from services_available table for service details
+    """
     treatment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, related_name='treatments')
-    treatment_code = models.CharField(max_length=50, blank=True, null=True)
-    description = models.TextField()
-    cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    service = models.ForeignKey('Service', on_delete=models.PROTECT, related_name='treatments', db_column='treatment_code', blank=True, null=True)
+    # Optional: actual cost charged (may differ from service price)
+    actual_cost = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'treatments'
 
     def __str__(self):
-        return f"{self.treatment_code} - {self.description[:50]}"
+        return f"{self.service.name if self.service else 'Unknown'} - {self.appointment.patient.full_name if self.appointment else 'No Appointment'}"
 
     @property
     def patient(self):
@@ -143,6 +146,18 @@ class Treatment(models.Model):
     @property
     def staff(self):
         return self.appointment.staff
+    
+    @property
+    def description(self):
+        """Get service description from related Service"""
+        return self.service.description if self.service else ''
+    
+    @property
+    def cost(self):
+        """Get cost - use actual_cost if set, otherwise use service price"""
+        if self.actual_cost is not None:
+            return self.actual_cost
+        return self.service.price if self.service else 0
 
 
 class Diagnosis(models.Model):
@@ -234,3 +249,24 @@ class Payment(models.Model):
     @property
     def patient(self):
         return self.invoice.patient
+
+
+class Service(models.Model):
+    """
+    Model for available services catalog - services that the clinic offers
+    This is separate from Treatment which represents actual treatments performed
+    """
+    service_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200, unique=True)  # Service name (e.g., "Consultation", "Dental Cleaning")
+    description = models.TextField(blank=True, null=True)  # Optional description
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # Standard price
+    is_active = models.BooleanField(default=True)  # Whether service is currently offered
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'services_available'
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} - ${self.price}"

@@ -177,6 +177,10 @@ def login(request):
             'is_verified': user.is_verified
         }
         
+        # Add staff_id if user is staff
+        if hasattr(user, 'staff_profile') and user.staff_profile:
+            user_data['staff_id'] = str(user.staff_profile.staff_id)
+        
         return Response({
             'message': 'Login successful',
             'user': user_data,

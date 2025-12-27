@@ -108,13 +108,25 @@ export const staffApi = {
 
   // Appointment APIs
   getAppointments: async (filters = {}) => {
-    const params = new URLSearchParams(filters);
+    // Remove null/undefined/'null'/'undefined' values so they don't become query params
+    const cleanFilters = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== null && v !== undefined && v !== 'null' && v !== 'undefined' && v !== ''));
+    const params = new URLSearchParams(cleanFilters);
     const queryString = params.toString() ? `?${params.toString()}` : '';
     
     try {
       return await makeAuthenticatedRequest(`/appointments/${queryString}`);
     } catch (error) {
       console.error('Failed to fetch appointments:', error);
+      throw error;
+    }
+  },
+
+  // Get current staff profile
+  getProfile: async () => {
+    try {
+      return await makeAuthenticatedRequest('/profile/');
+    } catch (error) {
+      console.error('Failed to fetch staff profile:', error);
       throw error;
     }
   },

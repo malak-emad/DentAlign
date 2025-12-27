@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, time
 from django.db.models import Q
 import json
 
-from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff
+from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff, Service
 
 
 class IsPatientOnly:
@@ -551,3 +551,100 @@ def book_appointment(request):
 def test_endpoint(request):
     """Simple test endpoint to verify URL routing"""
     return Response({'message': 'Test endpoint working'}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def patient_bills(request):
+    """
+    API endpoint for patient bills - returns all invoices for the logged-in patient
+    Similar to admin/billing but filtered to current patient only
+    """
+    try:
+        # Get the patient profile for the logged-in user
+        try:
+            patient = Patient.objects.get(user=request.user)
+        except Patient.DoesNotExist:
+            return Response(
+                {'error': 'Patient profile not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Get all invoices for this patient with related data and prefetch treatments
+        invoices = Invoice.objects.filter(patient=patient).select_related(
+            'appointment', 'appointment__staff'
+        ).prefetch_related('appointment__treatments__service').order_by('-issued_date')
+        
+        bills_data = []
+        for invoice in invoices:
+            # Get services/treatments from the appointment
+            items = []
+            calculated_total = 0.0
+            
+            if invoice.appointment:
+                # Get treatments for this appointment with service details
+                appointment_treatments = list(Treatment.objects.filter(
+                    appointment_id=invoice.appointment.appointment_id
+                ).select_related('service').order_by('created_at'))
+                
+                if appointment_treatments:
+                    items = [
+                        {
+                            'name': t.service.name if t.service else 'Unknown Service',
+                            'price': float(t.cost) if t.cost else 0
+                        }
+                        for t in appointment_treatments
+                    ]
+                    # Calculate total from all treatments
+                    calculated_total = sum(float(t.cost) if t.cost else 0 for t in appointment_treatments)
+                else:
+                    # No treatments found - use invoice total as single item
+                    items = [{
+                        'name': 'General Service',
+                        'price': float(invoice.total_amount or 0)
+                    }]
+                    calculated_total = float(invoice.total_amount or 0)
+            else:
+                # No appointment linked - use invoice total as single item
+                items = [{
+                    'name': 'General Service',
+                    'price': float(invoice.total_amount or 0)
+                }]
+                calculated_total = float(invoice.total_amount or 0)
+            
+            # Determine payment status - map to frontend expected values
+            payment_status = 'Unpaid'
+            if invoice.status == 'paid':
+                payment_status = 'Paid'
+            elif invoice.status == 'partially_paid':
+                payment_status = 'Unpaid'  # Show as Unpaid for partially paid invoices
+            # All other statuses (unpaid, pending, overdue, cancelled) show as Unpaid
+            
+            # Get doctor name
+            doctor_name = 'N/A'
+            if invoice.appointment and invoice.appointment.staff:
+                doctor_name = f"Dr. {invoice.appointment.staff.first_name or ''} {invoice.appointment.staff.last_name or ''}".strip()
+                if not doctor_name or doctor_name == 'Dr.':
+                    doctor_name = f"Dr. {invoice.appointment.staff.user.full_name}" if invoice.appointment.staff.user else 'N/A'
+            
+            # Get service title (use first treatment/service name, or "Invoice")
+            title = items[0]['name'] if items else 'Invoice'
+            
+            bill_data = {
+                'id': str(invoice.invoice_id),
+                'title': title,
+                'doctor': doctor_name,
+                'date': invoice.issued_date.strftime('%Y-%m-%d'),
+                'status': payment_status,
+                'total': calculated_total,
+                'items': items
+            }
+            bills_data.append(bill_data)
+        
+        return Response({'bills': bills_data}, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Patient bills error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
