@@ -1,6 +1,5 @@
 # Python
 __pycache__/
-__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -63,6 +62,16 @@ db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
+
+# Ad-hoc Backend Scripts (keep local, do not track)
+backend/test_*.py
+backend/debug_*.py
+backend/fix_*.py
+backend/create_*.py
+backend/list_*.py
+backend/simple_setup.py
+backend/reproduce_process.py
+backend/check_schema.py
 
 # Environment variables
 .env
@@ -134,7 +143,7 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# parcel-bundler cache (https://parceljs.org/)
+# parcel-bundler cache
 .cache
 .parcel-cache
 
@@ -143,10 +152,8 @@ jspm_packages/
 
 # Nuxt.js build / generate output
 .nuxt
-dist
 
 # Gatsby files
-.cache/
 public
 
 # Storybook build outputs
@@ -169,4 +176,5 @@ temp/
 
 # Build outputs
 build/
-dist/frontend/vite.config.js.timestamp-*
+dist/
+frontend/vite.config.js.timestamp-*
