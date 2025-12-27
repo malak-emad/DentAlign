@@ -79,6 +79,46 @@ class AdminApi {
       throw error;
     }
   }
+
+  async getStaff() {
+    try {
+      return await makeAuthenticatedRequest('/staff/');
+    } catch (error) {
+      console.error('Error fetching admin staff data:', error);
+      throw error;
+    }
+  }
+
+  async getUserApprovals() {
+    try {
+      return await makeAuthenticatedRequest('/user-approvals/');
+    } catch (error) {
+      console.error('Error fetching user approvals data:', error);
+      throw error;
+    }
+  }
+
+  async approveUser(userId) {
+    try {
+      return await makeAuthenticatedRequest(`/user-approvals/${userId}/approve/`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error approving user:', error);
+      throw error;
+    }
+  }
+
+  async rejectUser(userId) {
+    try {
+      return await makeAuthenticatedRequest(`/user-approvals/${userId}/reject/`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error rejecting user:', error);
+      throw error;
+    }
+  }
 }
 
 export const adminApi = new AdminApi();

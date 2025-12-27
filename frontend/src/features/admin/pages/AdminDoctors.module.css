@@ -117,6 +117,13 @@
   color: #374151;
 }
 
+.license {
+  margin: 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
 .info p {
   margin: 4px 0;
   font-size: 14px;

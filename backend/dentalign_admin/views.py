@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.utils import timezone
@@ -301,5 +301,172 @@ def schedules_list(request):
     except Exception as e:
         return Response(
             {'error': f'Schedules error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def staff_list(request):
+    """
+    API endpoint for admin staff list - from staff table
+    Gets all staff with their details including license number and specialization
+    """
+    try:
+        # Get all verified staff with related user data
+        staff_members = Staff.objects.select_related('user').filter(user__is_verified=True).order_by('first_name', 'last_name')
+        
+        staff_data = []
+        for staff in staff_members:
+            staff_item = {
+                'id': str(staff.staff_id),
+                'full_name': f"{staff.first_name or ''} {staff.last_name or ''}".strip() or staff.user.username,
+                'first_name': staff.first_name or '',
+                'last_name': staff.last_name or '',
+                'role_title': staff.role_title or 'Staff',
+                'specialization': staff.specialization or 'General',
+                'license_number': staff.license_number or 'N/A',
+                'phone': staff.phone or 'N/A',
+                'email': staff.user.email if staff.user else 'N/A',
+                'status': 'active',  # Default status, can be enhanced later
+                'created_at': staff.created_at.strftime('%Y-%m-%d') if staff.created_at else 'Unknown'
+            }
+            staff_data.append(staff_item)
+        
+        # Get some summary stats
+        total_staff = len(staff_data)
+        doctors = len([s for s in staff_data if 'doctor' in s['role_title'].lower()])
+        nurses = len([s for s in staff_data if 'nurse' in s['role_title'].lower()])
+        
+        response_data = {
+            'staff': staff_data,
+            'summary': {
+                'total_staff': total_staff,
+                'doctors': doctors,
+                'nurses': nurses,
+                'other': total_staff - doctors - nurses
+            }
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': f'Staff list error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def user_approvals_list(request):
+    """
+    API endpoint for admin user approvals - from staff table
+    Gets all staff (verified and unverified) for approval management
+    """
+    try:
+        # Get all staff with related user data (both verified and unverified)
+        staff_members = Staff.objects.select_related('user').order_by('-created_at')
+        
+        approvals_data = []
+        for staff in staff_members:
+            if staff.user:  # Make sure user exists
+                approval_item = {
+                    'id': str(staff.staff_id),
+                    'user_id': str(staff.user.user_id),
+                    'full_name': f"{staff.first_name or ''} {staff.last_name or ''}".strip() or staff.user.username,
+                    'first_name': staff.first_name or '',
+                    'last_name': staff.last_name or '',
+                    'email': staff.user.email,
+                    'role': staff.role_title or 'Staff',
+                    'specialization': staff.specialization or 'General',
+                    'license_number': staff.license_number or 'N/A',
+                    'phone': staff.phone or 'N/A',
+                    'is_verified': staff.user.is_verified,
+                    'created_at': staff.created_at.strftime('%Y-%m-%d') if staff.created_at else 'Unknown'
+                }
+                approvals_data.append(approval_item)
+        
+        # Get some summary stats
+        total_requests = len(approvals_data)
+        pending_requests = len([s for s in approvals_data if not s['is_verified']])
+        approved_requests = total_requests - pending_requests
+        
+        response_data = {
+            'requests': approvals_data,
+            'summary': {
+                'total_requests': total_requests,
+                'pending_requests': pending_requests,
+                'approved_requests': approved_requests
+            }
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': f'User approvals error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def approve_user(request, user_id):
+    """
+    API endpoint to approve a user by setting is_verified=True
+    """
+    try:
+        # Import User model
+        from accounts.models import User
+        
+        user = User.objects.get(user_id=user_id)
+        user.is_verified = True
+        user.save()
+        
+        return Response({
+            'message': f'User {user.username} has been approved successfully',
+            'user_id': str(user.user_id),
+            'is_verified': user.is_verified
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Approval error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reject_user(request, user_id):
+    """
+    API endpoint to reject a user by setting is_verified=False
+    """
+    try:
+        # Import User model
+        from accounts.models import User
+        
+        user = User.objects.get(user_id=user_id)
+        user.is_verified = False
+        user.save()
+        
+        return Response({
+            'message': f'User {user.username} has been rejected',
+            'user_id': str(user.user_id),
+            'is_verified': user.is_verified
+        }, status=status.HTTP_200_OK)
+        
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Rejection error: {str(e)}'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

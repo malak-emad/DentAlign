@@ -1,63 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styles from "./AdminDoctors.module.css";
-
-/* ===== MOCK DATA ===== */
-const MOCK_DOCTORS = [
-  {
-    id: 1,
-    full_name: "Dr. Ahmed Hassan",
-    specialty: "Dentistry",
-    email: "ahmed.hassan@clinic.com",
-    phone: "01011112222",
-    status: "active",
-    role: "doctor",
-  },
-  {
-    id: 2,
-    full_name: "Dr. Mona Ali",
-    specialty: "Orthodontics",
-    email: "mona.ali@clinic.com",
-    phone: "01133334444",
-    status: "on_leave",
-    role: "doctor",
-  },
-];
-
-const MOCK_NURSES = [
-  {
-    id: 101,
-    full_name: "Nurse Salma Ibrahim",
-    specialty: "Assistant Nurse",
-    email: "salma.ibrahim@clinic.com",
-    phone: "01055556666",
-    status: "active",
-    role: "nurse",
-  },
-  {
-    id: 102,
-    full_name: "Nurse Omar Adel",
-    specialty: "Senior Nurse",
-    email: "omar.adel@clinic.com",
-    phone: null,
-    status: "inactive",
-    role: "nurse",
-  },
-];
+import { adminApi } from "../api/adminApi.js";
 
 export default function AdminDoctors() {
   const [role, setRole] = useState("doctor"); // doctor | nurse
   const [search, setSearch] = useState("");
+  const [staffData, setStaffData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const data = role === "doctor" ? MOCK_DOCTORS : MOCK_NURSES;
+  useEffect(() => {
+    const fetchStaffData = async () => {
+      try {
+        setLoading(true);
+        const response = await adminApi.getStaff();
+        setStaffData(response.staff || []);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load staff data');
+        console.error('Error fetching staff data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const filteredData = data.filter((item) => {
+    fetchStaffData();
+  }, []);
+
+  const filteredData = staffData.filter((item) => {
     const q = search.toLowerCase();
-    return (
+    const roleMatch = role === "doctor" 
+      ? item.role_title.toLowerCase().includes('doctor') 
+      : item.role_title.toLowerCase().includes('nurse');
+    
+    const searchMatch = (
       item.full_name.toLowerCase().includes(q) ||
-      item.specialty.toLowerCase().includes(q) ||
+      item.specialization.toLowerCase().includes(q) ||
       item.email.toLowerCase().includes(q)
     );
+    
+    return roleMatch && searchMatch;
   });
 
   const getInitials = (name = "") => {
@@ -67,6 +50,14 @@ export default function AdminDoctors() {
       ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
       : parts[0]?.[0]?.toUpperCase() || "?";
   };
+
+  if (loading) {
+    return <div className={styles.container}>Loading staff data...</div>;
+  }
+
+  if (error) {
+    return <div className={styles.container}>Error: {error}</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -124,7 +115,8 @@ export default function AdminDoctors() {
 
               <div className={styles.info}>
                 <h3>{item.full_name}</h3>
-                <p className={styles.specialty}>{item.specialty}</p>
+                <p className={styles.specialty}>{item.specialization}</p>
+                <p className={styles.license}>License: {item.license_number}</p>
                 <p>{item.email}</p>
                 <span>{item.phone || "No phone number"}</span>
 
