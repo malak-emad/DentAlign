@@ -26,8 +26,8 @@ export default function Navbar() {
 
         <li>
           <a
-            href="/doctorOverview"
-            className={pathname === "/doctorOverview" ? styles.active : ""}
+            href="#"
+            className={pathname === "/doctors" ? styles.active : ""}
           >
             Doctors
           </a>

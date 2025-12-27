@@ -65,8 +65,8 @@ export default function Signup() {
       const result = await signupPatient(patientData);
       
       if (result.success) {
-        // Success! Show success message and redirect to profile page
-        setSuccessMessage('Account created successfully! Please complete your profile to book appointments...');
+        // Success! Show success message and redirect to homepage
+        setSuccessMessage('Account created successfully! Redirecting to homepage...');
         
         // Clear the form
         setName('');
@@ -74,11 +74,11 @@ export default function Signup() {
         setPassword('');
         setConfirmPassword('');
         
-        console.log('✅ Patient account created, redirecting to profile page');
+        console.log('✅ Patient account created, redirecting to dashboard');
         
-        // Redirect to patient profile after 2 seconds
+        // Redirect to patient dashboard after 2 seconds
         setTimeout(() => {
-          navigate('/patient/profile');
+          navigate('/patient/dashboard');
         }, 2000);
         
       } else {

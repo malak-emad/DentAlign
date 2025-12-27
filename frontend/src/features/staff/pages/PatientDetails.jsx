@@ -123,12 +123,12 @@ export default function PatientProfile() {
         >
           Treatments ({patient.treatments?.length || 0})
         </button>
-        {/* <button 
+        <button 
           onClick={() => setTab("invoices")} 
           className={tab === "invoices" ? styles.active : ""}
         >
           Invoices ({patient.invoices?.length || 0})
-        </button> */}
+        </button>
       </div>
 
       {/* Content */}
@@ -223,7 +223,7 @@ export default function PatientProfile() {
           </div>
         )}
 
-        {/* {tab === "invoices" && (
+        {tab === "invoices" && (
           <div className={styles.tabContent}>
             <h3>Billing & Invoices</h3>
             {patient.invoices && patient.invoices.length > 0 ? (
@@ -249,7 +249,7 @@ export default function PatientProfile() {
               <p className={styles.emptyMessage}>No invoices found</p>
             )}
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );

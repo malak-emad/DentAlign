@@ -138,28 +138,6 @@
   border-radius: 8px;
 }
 
-.warningBanner {
-  margin: 20px 0;
-  padding: 16px 20px;
-  background: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeaa7;
-  border-radius: 8px;
-  border-left: 4px solid #ffc107;
-}
-
-.warningBanner strong {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 16px;
-}
-
-.warningBanner p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
 /* ---------- Form Elements ---------- */
 .formGroup {
   margin-bottom: 16px;

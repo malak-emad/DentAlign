@@ -1,11 +1,36 @@
-/* PAGE CONTAINER */
 .container {
   padding: 30px 40px;
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
-/* TITLE */
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+}
+
+.loading {
+  color: #666;
+}
+
+.error {
+  color: #dc3545;
+}
+
+.retryButton {
+  margin-top: 16px;
+  padding: 12px 24px;
+  background: #0A345C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.retryButton:hover {
+  background: #08243e;
+}
+
 .pageTitle {
   font-size: 28px;
   font-weight: 700;
@@ -14,14 +39,11 @@
   letter-spacing: 0.5px;
 }
 
-/* GRID (STABLE) */
+/* GRID */
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 25px;
-
-  /* Prevents uneven layout when dynamic data loads */
-  align-items: stretch;
 }
 
 /* CARD */
@@ -32,19 +54,12 @@
   box-shadow: 0 4px 14px rgba(0,0,0,0.05);
   border: 1px solid #e9ecef;
   transition: transform 0.2s ease;
-
-  /* Ensures all cards maintain height consistency */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 220px;
 }
 
 .card:hover {
   transform: translateY(-3px);
 }
 
-/* CARD TITLE */
 .cardTitle {
   font-size: 18px;
   font-weight: 600;
@@ -52,7 +67,6 @@
   margin-bottom: 16px;
 }
 
-/* DETAILS TEXT */
 .details p {
   margin: 4px 0;
   font-size: 15px;
@@ -70,7 +84,6 @@
   margin-bottom: 16px;
 }
 
-/* NUMBER HIGHLIGHT */
 .highlightNumber {
   font-size: 26px;
   font-weight: 700;
@@ -79,88 +92,59 @@
 }
 
 /* BUTTONS */
-.primaryBtn,
-.secondaryBtn {
-  width: 100%;
-  padding: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: 0.2s ease;
-  margin-top: auto;      /* Keeps buttons at bottom of card */
-}
-
-/* PRIMARY BUTTON */
 .primaryBtn {
+  width: 100%;
+  padding: 10px;
   background: #0A345C;
   color: white;
   border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .primaryBtn:hover {
   background: #0C447A;
 }
 
-/* SECONDARY BUTTON */
 .secondaryBtn {
+  width: 100%;
+  padding: 10px;
   background: #eef2f7;
-  border: 1px solid #d9dde3;
+  border: none;
   color: #0A345C;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .secondaryBtn:hover {
-  background: #e3e8ef;
+  background: #d5e2f2;
 }
 
-/* LOADING / ERROR */
-.loading, .error {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
+/* LOADING AND ERROR STATES */
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  color: #64748b;
+  font-size: 16px;
 }
 
-.loading {
-  color: #666;
-}
-
-.error {
-  color: #dc3545;
-}
-
-/* LOADING CONTAINER */
-.loadingContainer,
 .errorContainer {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 200px;
-  font-size: 16px;
-  text-align: center;
-}
-
-.loadingContainer {
-  color: #64748b;
-}
-
-.errorContainer {
   color: #dc3545;
-}
-
-/* RETRY BUTTON */
-.retryButton {
-  margin-top: 16px;
-  padding: 12px 24px;
-  background: #0A345C;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
+  text-align: center;
   font-size: 16px;
 }
 
-.retryButton:hover {
-  background: #08243e;
+.secondaryBtn:hover {
+  background: #e3e8ef;
 }
 
 /* QUICK ACTIONS */
@@ -181,7 +165,6 @@
   color: #0A345C;
   font-weight: 600;
   transition: 0.2s ease;
-  text-align: center;
 }
 
 .quickBtn:hover {

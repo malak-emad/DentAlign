@@ -1,0 +1,222 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #0f172a;
+    /* Slate 900 */
+    color: #f8fafc;
+    /* Slate 50 */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: #1e293b;
+    /* Slate 800 */
+    border-bottom: 1px solid #334155;
+    /* Slate 700 */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 10;
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: #e2e8f0;
+    /* Slate 200 */
+}
+
+/* Toolbar & Buttons */
+.toolbar {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.toolBtn {
+    padding: 0.5rem 1rem;
+    background: #334155;
+    /* Slate 700 */
+    border: 1px solid #475569;
+    border-radius: 0.5rem;
+    color: #f1f5f9;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.toolBtn:hover {
+    background: #475569;
+    /* Slate 600 */
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toolBtn:active {
+    transform: translateY(0);
+}
+
+.uploadBtn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border: none;
+    font-weight: 600;
+}
+
+.uploadBtn:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+}
+
+/* Main Layout */
+.mainArea {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 280px;
+    background: #1e293b;
+    border-right: 1px solid #334155;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar h3 {
+    color: #94a3b8;
+    /* Slate 400 */
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+}
+
+.studyList {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.studyItem {
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #cbd5e1;
+    text-align: center;
+    transition: background 0.2s;
+}
+
+.studyItem:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Viewport */
+.viewportContainer {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #020617;
+    /* Slate 950 */
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+}
+
+.viewportPlaceholder {
+    text-align: center;
+    color: #475569;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.viewportPlaceholder p {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+}
+
+.subtext {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.toolGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.4rem;
+}
+
+.toolGroup input[type="range"] {
+    width: 60px;
+    height: 4px;
+    accent-color: #3b82f6;
+}
+
+.toolGroup label {
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.toolGroup span {
+    min-width: 35px;
+    text-align: right;
+}
+
+.sliceRange {
+    width: 100%;
+    cursor: pointer;
+    display: block;
+    height: 6px;
+    background: #334155;
+    border-radius: 3px;
+    outline: none;
+    accent-color: #3b82f6;
+}
+
+.viewportGrid {
+    display: flex;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+    gap: 10px;
+}
+
+.errorMessage {
+    color: #ef4444;
+    padding: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    margin: 10px;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

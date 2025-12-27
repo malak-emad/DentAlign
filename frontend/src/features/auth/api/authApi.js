@@ -67,35 +67,10 @@ async function makeApiRequest(endpoint, options = {}) {
  * @returns {Promise} - API response
  */
 export async function signupPatient(patientData) {
-  console.log('🔍 Signup API called with:', patientData);
-  
-  const result = await makeApiRequest('/auth/signup/', {
+  return makeApiRequest('/auth/signup/', {
     method: 'POST',
     body: JSON.stringify(patientData)
   });
-  
-  console.log('🔍 Signup API response:', result);
-  
-  // If signup is successful, store the token and user data like login does
-  // Note: result.data contains the actual API response due to makeApiRequest wrapping
-  if (result.success && result.data && result.data.token) {
-    console.log('🔍 Storing new user token:', result.data.token);
-    console.log('🔍 Storing new user data:', result.data.user);
-    
-    // Clear any existing auth data first
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    
-    // Store new auth data
-    localStorage.setItem('token', result.data.token);
-    localStorage.setItem('user', JSON.stringify(result.data.user));
-    
-    console.log('🔐 New user token stored successfully');
-  } else {
-    console.error('❌ Signup failed or missing token:', result);
-  }
-  
-  return result;
 }
 
 /**

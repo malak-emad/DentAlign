@@ -26,9 +26,7 @@ export default function RoleBasedRoute({ children, allowedRoles = [] }) {
   }
   
   // If user doesn't have required role, redirect to unauthorized page
-  // Handle both user.role (string) and user.role.name (object) formats
-  const userRole = typeof user.role === 'object' ? user.role.name : user.role;
-  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
   

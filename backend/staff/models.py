@@ -73,8 +73,8 @@ class Appointment(models.Model):
     appointment_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='appointments')
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='appointments')
-    start_time = models.DateTimeField(default=timezone.now)
-    end_time = models.DateTimeField(default=timezone.now()+timezone.timedelta(hours=1))
+    start_time = models.DateTimeField()
+    end_time = models.DateTimeField()
     fee = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     reason = models.TextField(blank=True, null=True)
@@ -184,7 +184,6 @@ class Invoice(models.Model):
     due_date = models.DateField()
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
-    is_approved = models.BooleanField(null=True, blank=True, default=None)
 
     class Meta:
         db_table = 'invoices'

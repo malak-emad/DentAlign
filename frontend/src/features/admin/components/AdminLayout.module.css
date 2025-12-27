@@ -1,9 +1,0 @@
-.wrapper {
-  display: flex;
-  flex-direction: column;
-}
-
-.content {
-  padding: 30px;
-  margin-left: 0;
-}
