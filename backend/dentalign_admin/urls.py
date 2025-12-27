@@ -20,4 +20,15 @@ urlpatterns = [
     path('user-approvals/<str:user_id>/approve/', views.approve_user, name='approve_user'),
     # Reject user
     path('user-approvals/<str:user_id>/reject/', views.reject_user, name='reject_user'),
+    # Patients list
+    path('patients/', views.patients_list, name='patients_list'),
+    # Patient details
+    path('patients/<str:patient_id>/', views.patient_details, name='patient_details'),
+    
+    # Invoice/Billing management
+    path('invoices/', views.invoices_list, name='invoices_list'),
+    path('billing/', views.billing_list, name='billing_list'),
+    path('invoices/<str:invoice_id>/approve/', views.approve_invoice, name='approve_invoice'),
+    path('invoices/<str:invoice_id>/reject/', views.reject_invoice, name='reject_invoice'),
+    path('invoices/<str:invoice_id>/payment/', views.update_payment_status, name='update_payment_status'),
 ]

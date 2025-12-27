@@ -41,10 +41,18 @@ def dashboard_stats(request):
             today_appointments = f"Error: {str(e)}"
             
         try:
-            # Revenue from paid_amount in invoices table
-            this_month_revenue = Invoice.objects.filter(
+            # Revenue from paid_amount in invoices table (exclude cancelled appointments)
+            this_month_revenue_query = Invoice.objects.filter(
                 created_at__date__gte=this_month
-            ).aggregate(total=Sum('paid_amount'))['total'] or 0
+            ).select_related('appointment')
+            
+            # Calculate revenue excluding cancelled appointments
+            this_month_revenue = 0
+            for invoice in this_month_revenue_query:
+                # Only count if appointment is not cancelled (or if no appointment linked)
+                if not invoice.appointment or invoice.appointment.status != 'cancelled':
+                    this_month_revenue += float(invoice.paid_amount or 0)
+                    
         except Exception as e:
             this_month_revenue = f"Error: {str(e)}"
             
@@ -222,24 +230,23 @@ def schedules_list(request):
         
         schedules_data = []
         for appointment in appointments:
-            # Get service name from treatments table using treatment_id
-            service_name = 'No Service'
+            # Get service name from treatments - look for treatments for this patient
+            service_name = 'General Consultation'
             try:
-                if appointment.treatment_id:
-                    # Use the treatment_id to get treatment details directly
-                    treatment = Treatment.objects.get(treatment_id=appointment.treatment_id)
-                    service_name = treatment.description or 'Unknown Service'
-            except Treatment.DoesNotExist:
-                service_name = 'No Service'
+                # Look for treatments for this patient around the appointment time
+                patient_treatments = Treatment.objects.filter(appointment__patient=appointment.patient).order_by('-created_at')
+                if patient_treatments.exists():
+                    # Use the most recent treatment for this patient
+                    service_name = patient_treatments.first().description or 'General Consultation'
             except Exception:
-                service_name = 'No Service'
+                service_name = 'General Consultation'
             
-            # Get payment status from invoices table using invoice_id
+            # Get payment status from invoices linked to this appointment
             payment_status = 'Pending'
             try:
-                if appointment.invoice_id:
-                    # Use the invoice_id to get invoice status directly
-                    invoice = Invoice.objects.get(invoice_id=appointment.invoice_id)
+                # Use the proper relationship - invoices have appointment foreign key
+                appointment_invoice = Invoice.objects.filter(appointment=appointment).first()
+                if appointment_invoice:
                     # Map database status to display status
                     status_mapping = {
                         'pending': 'Pending',
@@ -250,16 +257,16 @@ def schedules_list(request):
                         'partial': 'Pending',
                         'unpaid': 'Unpaid'
                     }
-                    payment_status = status_mapping.get(invoice.status, 'Pending')
-                    print(f"Appointment {appointment.appointment_id}: Found invoice {invoice.invoice_id} with status '{invoice.status}' -> mapped to '{payment_status}'")
+                    payment_status = status_mapping.get(appointment_invoice.status, 'Pending')
+                    print(f"Appointment {appointment.appointment_id}: Found invoice {appointment_invoice.invoice_id} with status '{appointment_invoice.status}' -> mapped to '{payment_status}'")
                 elif appointment.status == 'completed':
                     payment_status = 'Paid' 
                 elif appointment.status == 'cancelled':
                     payment_status = 'Cancelled'
                 else:
-                    print(f"Appointment {appointment.appointment_id}: No invoice_id, status is '{appointment.status}' -> defaulting to 'Pending'")
-            except Invoice.DoesNotExist:
-                print(f"Appointment {appointment.appointment_id}: Invoice {appointment.invoice_id} not found")
+                    print(f"Appointment {appointment.appointment_id}: No linked invoice, status is '{appointment.status}' -> defaulting to 'Pending'")
+            except Exception as e:
+                print(f"Error getting payment status for appointment {appointment.appointment_id}: {str(e)}")
                 # Fallback to appointment status
                 if appointment.status == 'completed':
                     payment_status = 'Paid' 
@@ -468,5 +475,357 @@ def reject_user(request, user_id):
     except Exception as e:
         return Response(
             {'error': f'Rejection error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def patients_list(request):
+    """
+    API endpoint for admin patients list - from patients table
+    Gets all patients with their basic information
+    """
+    try:
+        # Get all patients ordered by creation date (newest first)
+        patients = Patient.objects.all().order_by('-created_at')
+        
+        patients_data = []
+        for patient in patients:
+            patient_item = {
+                'patient_id': str(patient.patient_id),
+                'full_name': patient.full_name,
+                'first_name': patient.first_name,
+                'last_name': patient.last_name,
+                'email': patient.email,
+                'phone': patient.phone or 'N/A',
+                'dob': patient.dob.strftime('%Y-%m-%d') if patient.dob else 'N/A',
+                'gender': patient.gender or 'N/A',
+                'address': patient.address or 'N/A',
+                'created_at': patient.created_at.strftime('%Y-%m-%d') if patient.created_at else 'Unknown'
+            }
+            patients_data.append(patient_item)
+        
+        # Get some summary stats
+        total_patients = len(patients_data)
+        today = timezone.now().date()
+        today_patients = len([p for p in patients_data if p['created_at'] == today.strftime('%Y-%m-%d')])
+        
+        response_data = {
+            'patients': patients_data,
+            'summary': {
+                'total_patients': total_patients,
+                'today_patients': today_patients
+            }
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response(
+            {'error': f'Patients list error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def patient_details(request, patient_id):
+    """
+    API endpoint for admin patient details - from patients table with related data
+    Gets individual patient with appointments, invoices, and medical records
+    """
+    try:
+        # Get patient with related data
+        patient = Patient.objects.select_related('user').get(patient_id=patient_id)
+        
+        # Get patient's appointments with related staff and treatments
+        appointments = Appointment.objects.filter(patient=patient).select_related('staff').order_by('-start_time')
+        appointments_data = []
+        for appointment in appointments:
+            # Get service name from treatments - look for treatments for this patient
+            service_name = "General Consultation"
+            try:
+                # Look for treatments for this patient around the appointment time
+                patient_treatments = Treatment.objects.filter(appointment__patient=appointment.patient).order_by('-created_at')
+                if patient_treatments.exists():
+                    # Use the most recent treatment for this patient
+                    service_name = patient_treatments.first().description or service_name
+            except Exception:
+                pass
+            
+            appointment_data = {
+                'id': str(appointment.appointment_id),
+                'date': appointment.start_time.strftime('%Y-%m-%d'),
+                'time': appointment.start_time.strftime('%H:%M'),
+                'doctor': f"{appointment.staff.first_name or ''} {appointment.staff.last_name or ''}".strip() or appointment.staff.user.username,
+                'service': service_name,
+                'status': appointment.status,
+                'fee': str(appointment.fee) if appointment.fee else '0.00'
+            }
+            appointments_data.append(appointment_data)
+        
+        # Get patient's invoices (exclude invoices for cancelled appointments)
+        invoices = Invoice.objects.filter(patient=patient).select_related('appointment').order_by('-created_at')
+        invoices_data = []
+        for invoice in invoices:
+            # Check if related appointment is cancelled
+            is_cancelled_appointment = invoice.appointment and invoice.appointment.status == 'cancelled'
+            
+            invoice_data = {
+                'id': str(invoice.invoice_id),
+                'date': invoice.issued_date.strftime('%Y-%m-%d'),
+                'amount': float(invoice.total_amount),
+                'paid_amount': float(invoice.paid_amount),
+                'status': invoice.status,
+                'due_date': invoice.due_date.strftime('%Y-%m-%d'),
+                'is_overdue': invoice.is_overdue,
+                'is_cancelled_appointment': is_cancelled_appointment  # Flag for frontend
+            }
+            invoices_data.append(invoice_data)
+        
+        # Calculate age from date of birth
+        age = 'N/A'
+        if patient.dob:
+            from datetime import date
+            today = date.today()
+            age = today.year - patient.dob.year - ((today.month, today.day) < (patient.dob.month, patient.dob.day))
+        
+        patient_data = {
+            'id': str(patient.patient_id),
+            'full_name': patient.full_name,
+            'first_name': patient.first_name,
+            'last_name': patient.last_name,
+            'email': patient.email,
+            'phone': patient.phone or 'N/A',
+            'dob': patient.dob.strftime('%Y-%m-%d') if patient.dob else 'N/A',
+            'age': age,
+            'gender': patient.gender or 'N/A',
+            'address': patient.address or 'N/A',
+            'medical_history': patient.medical_history or 'N/A',
+            'registered_at': patient.created_at.strftime('%Y-%m-%d') if patient.created_at else 'Unknown',
+            'appointments': appointments_data,
+            'invoices': invoices_data
+        }
+        
+        return Response(patient_data, status=status.HTTP_200_OK)
+        
+    except Patient.DoesNotExist:
+        return Response(
+            {'error': 'Patient not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Patient details error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def invoices_list(request):
+    """
+    API endpoint for admin invoices - invoices pending approval (is_approved IS NULL)
+    """
+    try:
+        # Get invoices pending approval with related data
+        invoices = Invoice.objects.filter(is_approved__isnull=True).select_related('patient', 'appointment', 'appointment__staff').order_by('-created_at')
+        
+        invoices_data = []
+        for invoice in invoices:
+            # Get services from appointment or default
+            services = []
+            if invoice.appointment:
+                appointment_treatments = Treatment.objects.filter(appointment=invoice.appointment)
+                if appointment_treatments.exists():
+                    services = [
+                        {
+                            'name': t.description or 'General Treatment',
+                            'price': float(t.cost or 0)
+                        }
+                        for t in appointment_treatments
+                    ]
+                else:
+                    services = [{
+                        'name': 'General Consultation',
+                        'price': float(invoice.total_amount or 0)
+                    }]
+            else:
+                services = [{
+                    'name': 'General Service',
+                    'price': float(invoice.total_amount or 0)
+                }]
+            
+            # Determine approval status
+            approval_status = 'pending'
+            if invoice.is_approved is True:
+                approval_status = 'approved'
+            elif invoice.is_approved is False:
+                approval_status = 'rejected'
+            
+            appointment_status = invoice.appointment.status if invoice.appointment else 'N/A'
+            invoice_data = {
+                'id': str(invoice.invoice_id),
+                'patient': invoice.patient.full_name,
+                'doctor': f"Dr. {invoice.appointment.staff.first_name} {invoice.appointment.staff.last_name}" if invoice.appointment and invoice.appointment.staff else 'N/A',
+                'date': invoice.issued_date.strftime('%Y-%m-%d'),
+                'total': float(invoice.total_amount),
+                'status': approval_status,
+                'appointmentStatus': appointment_status,
+                'services': services
+            }
+            invoices_data.append(invoice_data)
+        
+        return Response(invoices_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Invoices list error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def billing_list(request):
+    """
+    API endpoint for admin billing - approved invoices only (is_approved=True)
+    """
+    try:
+        # Get approved invoices with related data
+        invoices = Invoice.objects.filter(is_approved=True).select_related('patient', 'appointment', 'appointment__staff').order_by('-created_at')
+        
+        invoices_data = []
+        for invoice in invoices:
+            # Get services from appointment or default
+            services = []
+            if invoice.appointment:
+                appointment_treatments = Treatment.objects.filter(appointment=invoice.appointment)
+                if appointment_treatments.exists():
+                    services = [
+                        {
+                            'name': t.description or 'General Treatment',
+                            'price': float(t.cost or 0)
+                        }
+                        for t in appointment_treatments
+                    ]
+                else:
+                    services = [{
+                        'name': 'General Consultation',
+                        'price': float(invoice.total_amount or 0)
+                    }]
+            else:
+                services = [{
+                    'name': 'General Service',
+                    'price': float(invoice.total_amount or 0)
+                }]
+            
+            invoice_data = {
+                'id': str(invoice.invoice_id),
+                'patient': invoice.patient.full_name,
+                'doctor': f"Dr. {invoice.appointment.staff.first_name} {invoice.appointment.staff.last_name}" if invoice.appointment and invoice.appointment.staff else 'N/A',
+                'date': invoice.issued_date.strftime('%Y-%m-%d'),
+                'total': float(invoice.total_amount),
+                'status': 'approved',  # all billing items are approved
+                'paymentStatus': invoice.status,  # payment status
+                'services': services
+            }
+            invoices_data.append(invoice_data)
+        
+        return Response(invoices_data, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Billing list error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def approve_invoice(request, invoice_id):
+    """
+    API endpoint to approve an invoice (set is_approved=True)
+    """
+    try:
+        invoice = Invoice.objects.get(invoice_id=invoice_id)
+        invoice.is_approved = True
+        invoice.save()
+        
+        return Response({'message': 'Invoice approved successfully'}, status=status.HTTP_200_OK)
+        
+    except Invoice.DoesNotExist:
+        return Response(
+            {'error': 'Invoice not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Approve invoice error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def reject_invoice(request, invoice_id):
+    """
+    API endpoint to reject an invoice (set is_approved=False)
+    """
+    try:
+        invoice = Invoice.objects.get(invoice_id=invoice_id)
+        invoice.is_approved = False
+        invoice.status = 'cancelled'  # Also update payment status
+        invoice.save()
+        
+        return Response({'message': 'Invoice rejected successfully'}, status=status.HTTP_200_OK)
+        
+    except Invoice.DoesNotExist:
+        return Response(
+            {'error': 'Invoice not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Reject invoice error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def update_payment_status(request, invoice_id):
+    """
+    API endpoint to update payment status of an invoice
+    """
+    try:
+        payment_status = request.data.get('status')
+        if not payment_status:
+            return Response(
+                {'error': 'Payment status is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        invoice = Invoice.objects.get(invoice_id=invoice_id)
+        invoice.status = payment_status
+        
+        # If marking as paid, update paid_amount
+        if payment_status == 'paid':
+            invoice.paid_amount = invoice.total_amount
+        elif payment_status == 'unpaid':
+            invoice.paid_amount = 0
+            
+        invoice.save()
+        
+        return Response({'message': f'Invoice marked as {payment_status} successfully'}, status=status.HTTP_200_OK)
+        
+    except Invoice.DoesNotExist:
+        return Response(
+            {'error': 'Invoice not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Update payment status error: {str(e)}'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

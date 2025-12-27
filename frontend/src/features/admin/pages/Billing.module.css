@@ -1,3 +1,17 @@
+.completed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.cancelled {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.scheduled {
+  background: #d1ecf1;
+  color: #0c5460;
+}
 /* ===========================
    CONTAINER
    =========================== */
@@ -6,6 +20,27 @@
   max-width: 1200px;
   margin: auto;
   font-family: Inter, Arial, sans-serif;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 48px;
+  font-size: 16px;
+  color: #666;
+}
+
+.error {
+  color: #e74c3c;
+  background: #fdf2f2;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+}
+
+.noData {
+  text-align: center;
+  padding: 32px;
+  color: #666;
+  font-style: italic;
 }
 
 /* ===========================

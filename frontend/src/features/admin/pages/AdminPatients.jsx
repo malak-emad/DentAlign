@@ -1,33 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./AdminPatients.module.css";
 import { Link } from "react-router-dom";
-
-/* ===== MOCK DATA (frontend only) ===== */
-const MOCK_PATIENTS = [
-  {
-    patient_id: 1,
-    full_name: "John Doe",
-    email: "john.doe@email.com",
-    phone: "01012345678",
-  },
-  {
-    patient_id: 2,
-    full_name: "Sarah Ahmed",
-    email: "sarah.ahmed@email.com",
-    phone: "01198765432",
-  },
-  {
-    patient_id: 3,
-    full_name: "Michael Smith",
-    email: "michael.smith@email.com",
-    phone: null,
-  },
-];
+import { adminApi } from "../api/adminApi.js";
 
 export default function AdminPatients() {
   const [search, setSearch] = useState("");
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const filteredPatients = MOCK_PATIENTS.filter((p) => {
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        setLoading(true);
+        const response = await adminApi.getPatients();
+        setPatients(response.patients || []);
+        setError(null);
+      } catch (err) {
+        setError('Failed to load patients data');
+        console.error('Error fetching patients:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
+
+  const filteredPatients = patients.filter((p) => {
     const q = search.toLowerCase();
     return (
       p.full_name.toLowerCase().includes(q) ||
@@ -42,6 +42,14 @@ export default function AdminPatients() {
       ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
       : parts[0]?.[0]?.toUpperCase() || "?";
   };
+
+  if (loading) {
+    return <div className={styles.container}>Loading patients data...</div>;
+  }
+
+  if (error) {
+    return <div className={styles.container}>Error: {error}</div>;
+  }
 
   return (
     <div className={styles.container}>
@@ -75,7 +83,7 @@ export default function AdminPatients() {
               <div className={styles.info}>
                 <h3>{p.full_name}</h3>
                 <p>{p.email}</p>
-                <span>{p.phone || "No phone number"}</span>
+                <span>{p.phone !== 'N/A' ? p.phone : "No phone number"}</span>
               </div>
             </Link>
           ))}
