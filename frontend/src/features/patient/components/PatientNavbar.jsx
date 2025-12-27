@@ -4,20 +4,22 @@ import menuIcon from "../../../assets/icons/menu.png";
 import bellIcon from "../../../assets/icons/bell.png";
 import logoutIcon from "../../../assets/icons/logout.png";
 import logo from "../../../assets/logos/medical-logo.png";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import LogoutConfirmModal from "../../../components/common/LogoutConfirmModal"; // adjust path if needed
 
 export default function PatientNavbar({ onMenuToggle }) {
   const [patientName, setPatientName] = useState("Patient");
+  const [showLogout, setShowLogout] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Get user data from localStorage
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem("user");
     if (userData) {
       try {
         const user = JSON.parse(userData);
         setPatientName(user.username || user.full_name || "Patient");
       } catch (error) {
-        console.error('Failed to parse user data:', error);
+        console.error("Failed to parse user data:", error);
       }
     }
   }, []);
@@ -28,33 +30,54 @@ export default function PatientNavbar({ onMenuToggle }) {
     .map((n) => n[0].toUpperCase())
     .join("");
 
+  const handleLogoutConfirm = () => {
+    localStorage.clear(); // optional but recommended
+    navigate("/login");
+  };
+
   return (
-    <nav className={styles.navbar}>
-      <div className={styles.left}>
-        <img
-          src={menuIcon}
-          alt="menu"
-          className={styles.menuIcon}
-          onClick={onMenuToggle}
-        />
+    <>
+      <nav className={styles.navbar}>
+        {/* ===== LEFT ===== */}
+        <div className={styles.left}>
+          <img
+            src={menuIcon}
+            alt="menu"
+            className={styles.menuIcon}
+            onClick={onMenuToggle}
+          />
 
-        <img src={logo} alt="Clinic Logo" className={styles.logo} />
-        <span className={styles.brand}>DentAlign</span>
-      </div>
+          <img src={logo} alt="Clinic Logo" className={styles.logo} />
+          <span className={styles.brand}>DentAlign</span>
+        </div>
 
-      <div className={styles.right}>
-        <img src={bellIcon} className={styles.bell} />
+        {/* ===== RIGHT ===== */}
+        <div className={styles.right}>
+          <img src={bellIcon} alt="notifications" className={styles.bell} />
 
-        <Link to="/patient/profile">
+          <Link to="/patient/profile">
             <div className={styles.profile}>
-            <div className={styles.initials}>{initials}</div>
+              <div className={styles.initials}>{initials}</div>
             </div>
-        </Link>
+          </Link>
 
-        <Link to="/login">
-          <img src={logoutIcon} className={styles.logoutIcon} />
-        </Link>
-      </div>
-    </nav>
+          {/* 🚪 LOGOUT */}
+          <img
+            src={logoutIcon}
+            alt="logout"
+            className={styles.logoutIcon}
+            onClick={() => setShowLogout(true)}
+          />
+        </div>
+      </nav>
+
+      {/* 🔔 LOGOUT CONFIRM MODAL */}
+      {showLogout && (
+        <LogoutConfirmModal
+          onCancel={() => setShowLogout(false)}
+          onConfirm={handleLogoutConfirm}
+        />
+      )}
+    </>
   );
 }

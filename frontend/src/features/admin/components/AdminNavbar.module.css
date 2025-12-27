@@ -141,3 +141,53 @@
   from { opacity: 0; transform: translateY(-5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* 🔔 Bell wrapper */
+.bellWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Bell icon */
+.bell {
+  width: 22px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.bell:hover {
+  opacity: 0.7;
+}
+
+/* Active bell (when on notifications page) */
+.activeBell {
+  filter: brightness(0) saturate(100%) invert(17%) sepia(38%)
+    saturate(1150%) hue-rotate(182deg) brightness(93%) contrast(92%);
+  transform: scale(1.1);
+}
+
+/* 🔴 Notification badge */
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+
+  background: #dc2626;
+  color: white;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  border-radius: 999px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 0 0 2px #ffffff;
+}

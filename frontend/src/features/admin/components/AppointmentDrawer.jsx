@@ -47,11 +47,11 @@ export default function AppointmentDrawer({ appointment, onClose, onSave }) {
           </label>
 
           <label>
-            Time
+            Cost
             <input
-              type="time"
-              name="time"
-              value={form.time}
+              type="number"
+              name="cost"
+              value={form.cost}
               onChange={handleChange}
             />
           </label>

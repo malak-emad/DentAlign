@@ -5,6 +5,7 @@ import styles from "./Reporting.module.css";
 export default function AdminReports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
   const [metrics, setMetrics] = useState({
     totalRevenue: 0,
     paidInvoices: 0,
@@ -12,13 +13,16 @@ export default function AdminReports() {
     totalVisits: 0,
     activeDoctors: 0,
   });
+
   const [revenue, setRevenue] = useState({
     today: 0,
     month: 0,
     avgInvoice: 0,
   });
+
   const [invoiceStats, setInvoiceStats] = useState([]);
   const [doctorStats, setDoctorStats] = useState([]);
+  const [nurseStats, setNurseStats] = useState([]); // ✅ NEW
 
   useEffect(() => {
     fetchReportsData();
@@ -28,15 +32,16 @@ export default function AdminReports() {
     try {
       setLoading(true);
       const data = await adminApi.getReports();
-      
+
       setMetrics(data.metrics || metrics);
       setRevenue(data.revenue || revenue);
       setInvoiceStats(data.invoiceStats || []);
       setDoctorStats(data.doctorStats || []);
+      setNurseStats(data.nurseStats || []); // ✅ NEW
       setError(null);
     } catch (err) {
-      console.error('Error fetching reports:', err);
-      setError('Failed to load reports data');
+      console.error("Error fetching reports:", err);
+      setError("Failed to load reports data");
     } finally {
       setLoading(false);
     }
@@ -62,7 +67,7 @@ export default function AdminReports() {
       <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>Reports & Metrics</h1>
-          <p style={{ color: 'red' }}>{error}</p>
+          <p style={{ color: "red" }}>{error}</p>
         </div>
       </div>
     );
@@ -137,7 +142,34 @@ export default function AdminReports() {
             ))
           ) : (
             <div className={styles.tableRow}>
-              <span colSpan="3">No doctor data available</span>
+              <span>No doctor data available</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ===== NURSE PERFORMANCE ===== */}
+      <div className={styles.section}>
+        <h3>Nurse Performance</h3>
+
+        <div className={styles.table}>
+          <div className={styles.tableHeader}>
+            <span>Nurse</span>
+            <span>Visits</span>
+            <span>Revenue</span>
+          </div>
+
+          {nurseStats.length > 0 ? (
+            nurseStats.map((n, i) => (
+              <div key={i} className={styles.tableRow}>
+                <span>{n.name}</span>
+                <span>{n.visits}</span>
+                <strong>{n.revenue} EGP</strong>
+              </div>
+            ))
+          ) : (
+            <div className={styles.tableRow}>
+              <span>No nurse data available</span>
             </div>
           )}
         </div>

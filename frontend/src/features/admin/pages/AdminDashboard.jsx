@@ -76,8 +76,8 @@ export default function AdminDashboard() {
         </div>
 
         <div className={styles.statCard}>
-          <p className={styles.statLabel}>Monthly Revenue</p>
-          <h2 className={styles.statValue}>${dashboardData?.revenue?.this_month?.toLocaleString() || '0'}</h2>
+          <p className={styles.statLabel}>Total Revenue</p>
+          <h2 className={styles.statValue}>${dashboardData?.revenue?.total?.toLocaleString() || '0'}</h2>
         </div>
 
         <div className={styles.statCard}>

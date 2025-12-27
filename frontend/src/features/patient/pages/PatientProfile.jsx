@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { patientApi } from "../api/patientApi";
 import styles from "./PatientProfile.module.css";
 
 export default function PatientProfile() {
   const [patient, setPatient] = useState(null);
+  const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(false);
@@ -14,10 +15,11 @@ export default function PatientProfile() {
         setLoading(true);
         const data = await patientApi.getProfile();
         setPatient(data);
+        setFormData(data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch profile:', err);
-        setError('Failed to load profile data. Please try again.');
+        console.error(err);
+        setError("Failed to load profile data.");
       } finally {
         setLoading(false);
       }
@@ -26,33 +28,30 @@ export default function PatientProfile() {
     fetchProfile();
   }, []);
 
-  const handleEdit = () => {
-    setEditing(true);
+  const handleChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleEdit = () => setEditing(true);
+
+  const handleCancel = () => {
+    setFormData(patient);
+    setEditing(false);
   };
 
   const handleSave = async () => {
     try {
-      const updatedData = await patientApi.updateProfile(patient);
-      setPatient(updatedData);
+      const updated = await patientApi.updateProfile(formData);
+      setPatient(updated);
+      setFormData(updated);
       setEditing(false);
-      setError(null);
     } catch (err) {
-      console.error('Failed to update profile:', err);
-      setError('Failed to update profile. Please try again.');
+      console.error(err);
+      setError("Failed to update profile.");
     }
-  };
-
-  const handleCancel = () => {
-    setEditing(false);
-    // Reload the profile data to reset any unsaved changes
-    window.location.reload();
-  };
-
-  const handleInputChange = (field, value) => {
-    setPatient(prev => ({
-      ...prev,
-      [field]: value
-    }));
   };
 
   if (loading) {
@@ -74,23 +73,18 @@ export default function PatientProfile() {
     );
   }
 
-  if (!patient) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.error}>
-          <p>No profile data available</p>
-        </div>
-      </div>
-    );
-  }
+  if (!patient) return null;
 
   return (
     <div className={styles.container}>
-      
-      {/* ------ HEADER CARD ------ */}
+      {/* ===== HEADER ===== */}
       <div className={styles.header}>
         <div className={styles.avatar}>
-          {patient.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+          {patient.name
+            ?.split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()}
         </div>
 
         <div className={styles.info}>
@@ -98,7 +92,6 @@ export default function PatientProfile() {
           <p className={styles.role}>Patient</p>
         </div>
 
-        {/* EDIT BUTTON */}
         {editing ? (
           <div className={styles.editActions}>
             <button className={styles.saveBtn} onClick={handleSave}>
@@ -115,151 +108,156 @@ export default function PatientProfile() {
         )}
       </div>
 
-      {/* Error display */}
-      {error && (
-        <div className={styles.errorBanner}>
-          {error}
-        </div>
-      )}
-
-      {/* Profile completion warning - show if essential fields are missing */}
-      {patient && (!patient.phone || !patient.address || !patient.birthdate || !patient.gender) && (
+      {/* ===== WARNING ===== */}
+      {(!patient.phone ||
+        !patient.address ||
+        !patient.gender ||
+        !patient.birthdate) && (
         <div className={styles.warningBanner}>
-          <strong>⚠️ Please complete your profile information before booking appointments.</strong>
-          <p>Update your contact details, address, and medical history to ensure we can provide the best care.</p>
+          <strong>⚠️ Complete your profile</strong>
+          <p>
+            Please complete your information before booking appointments.
+          </p>
         </div>
       )}
 
-      {/* ------ DETAILS CARDS ------ */}
+      {/* ===== CARDS ===== */}
       <div className={styles.cards}>
-
+        {/* CONTACT */}
         <div className={styles.card}>
           <h3>Contact Information</h3>
+
           {editing ? (
             <>
               <div className={styles.formGroup}>
-                <label>Email:</label>
+                <label>Email</label>
                 <input
-                  type="email"
-                  value={patient.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
                   className={styles.input}
+                  value={formData.email || ""}
+                  onChange={(e) =>
+                    handleChange("email", e.target.value)
+                  }
                 />
               </div>
+
               <div className={styles.formGroup}>
-                <label>Phone:</label>
+                <label>Phone</label>
                 <input
-                  type="tel"
-                  value={patient.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
                   className={styles.input}
+                  value={formData.phone || ""}
+                  onChange={(e) =>
+                    handleChange("phone", e.target.value)
+                  }
                 />
               </div>
             </>
           ) : (
             <>
               <p><strong>Email:</strong> {patient.email}</p>
-              <p><strong>Phone:</strong> {patient.phone || 'Not specified'}</p>
+              <p><strong>Phone:</strong> {patient.phone || "Not specified"}</p>
             </>
           )}
         </div>
 
+        {/* PERSONAL */}
         <div className={styles.card}>
           <h3>Personal Details</h3>
+
           {editing ? (
             <>
               <div className={styles.formGroup}>
-                <label>Gender:</label>
+                <label>Gender</label>
                 <select
-                  value={patient.gender}
-                  onChange={(e) => handleInputChange('gender', e.target.value)}
                   className={styles.input}
+                  value={formData.gender || ""}
+                  onChange={(e) =>
+                    handleChange("gender", e.target.value)
+                  }
                 >
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
+                  <option value="">Select</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
                 </select>
               </div>
+
               <div className={styles.formGroup}>
-                <label>Birth Date:</label>
+                <label>Birth Date</label>
                 <input
                   type="date"
-                  value={patient.birthdate}
-                  onChange={(e) => handleInputChange('birthdate', e.target.value)}
                   className={styles.input}
+                  value={formData.birthdate || ""}
+                  onChange={(e) =>
+                    handleChange("birthdate", e.target.value)
+                  }
                 />
               </div>
+
               <div className={styles.formGroup}>
-                <label>Blood Type:</label>
+                <label>Blood Type</label>
                 <select
-                  value={patient.blood_type}
-                  onChange={(e) => handleInputChange('blood_type', e.target.value)}
                   className={styles.input}
+                  value={formData.blood_type || ""}
+                  onChange={(e) =>
+                    handleChange("blood_type", e.target.value)
+                  }
                 >
-                  <option value="">Select blood type</option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="O+">O+</option>
-                  <option value="O-">O-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
+                  <option value="">Select</option>
+                  <option>A+</option>
+                  <option>A-</option>
+                  <option>B+</option>
+                  <option>B-</option>
+                  <option>O+</option>
+                  <option>O-</option>
+                  <option>AB+</option>
+                  <option>AB-</option>
                 </select>
               </div>
             </>
           ) : (
             <>
-              <p><strong>Gender:</strong> {patient.gender || 'Not specified'}</p>
-              <p><strong>Birthdate:</strong> {patient.birthdate || 'Not specified'}</p>
-              <p><strong>Blood Type:</strong> {patient.blood_type || 'Not specified'}</p>
+              <p><strong>Gender:</strong> {patient.gender || "Not specified"}</p>
+              <p><strong>Birthdate:</strong> {patient.birthdate || "Not specified"}</p>
+              <p><strong>Blood Type:</strong> {patient.blood_type || "Not specified"}</p>
             </>
           )}
         </div>
 
+        {/* ADDRESS */}
         <div className={styles.card}>
           <h3>Address</h3>
+
           {editing ? (
-            <div className={styles.formGroup}>
-              <label>Address:</label>
-              <textarea
-                value={patient.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
-                className={styles.textarea}
-                rows="3"
-              />
-            </div>
+            <textarea
+              className={styles.textarea}
+              rows="3"
+              value={formData.address || ""}
+              onChange={(e) =>
+                handleChange("address", e.target.value)
+              }
+            />
           ) : (
-            <p>{patient.address || 'No address on file'}</p>
+            <p>{patient.address || "No address on file"}</p>
           )}
         </div>
 
+        {/* MEDICAL */}
         <div className={styles.card}>
           <h3>Medical History</h3>
+
           {editing ? (
-            <div className={styles.formGroup}>
-              <label>Medical History:</label>
-              <textarea
-                value={patient.medical_history}
-                onChange={(e) => handleInputChange('medical_history', e.target.value)}
-                className={styles.textarea}
-                rows="4"
-                placeholder="Enter medical history, allergies, medications, etc."
-              />
-            </div>
+            <textarea
+              className={styles.textarea}
+              rows="4"
+              value={formData.medical_history || ""}
+              onChange={(e) =>
+                handleChange("medical_history", e.target.value)
+              }
+            />
           ) : (
-            <p>{patient.medical_history || 'No medical history on file'}</p>
+            <p>{patient.medical_history || "No medical history on file"}</p>
           )}
         </div>
-
-        <div className={styles.card}>
-          <h3>Emergency Contact</h3>
-          <p><strong>Name:</strong> {patient.emergency_contact?.name || 'Not specified'}</p>
-          <p><strong>Phone:</strong> {patient.emergency_contact?.phone || 'Not specified'}</p>
-          <p><strong>Relationship:</strong> {patient.emergency_contact?.relationship || 'Not specified'}</p>
-        </div>
-
       </div>
     </div>
   );

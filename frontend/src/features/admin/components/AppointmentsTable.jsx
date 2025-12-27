@@ -16,8 +16,8 @@ export default function AppointmentsTable({ appointments, onRowClick }) {
             <th>Doctor</th>
             <th>Service</th>
             <th>Date</th>
-            <th>Time</th>
             <th>Status</th>
+            <th>Cost</th>
             <th>Payment</th>
           </tr>
         </thead>
@@ -33,10 +33,10 @@ export default function AppointmentsTable({ appointments, onRowClick }) {
               <td>{a.doctor}</td>
               <td>{a.service}</td>
               <td>{a.date}</td>
-              <td>{a.time}</td>
               <td>
                 <AppointmentStatusBadge status={a.status} />
               </td>
+              <td>{a.cost?.toLocaleString()} EGP</td>
               <td>
                 <span className={
                   a.payment_status?.toLowerCase() === 'paid' ? styles.paid :

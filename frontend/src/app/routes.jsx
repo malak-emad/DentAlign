@@ -39,6 +39,8 @@ import Services from "../features/admin/pages/Services";
 import AdminInvoices from '../features/admin/pages/Billing';
 import AdminReports from '../features/admin/pages/Reporting';
 import AdminUserApprovals from '../features/admin/pages/UserApprovals';
+import AdminProfile from '../features/admin/pages/AdminProfile';
+import AdminNotifications from '../features/admin/pages/AdminNotifications';
 
 
 
@@ -188,6 +190,22 @@ const routes = [
     ),
   },
 // --- ADMIN ROUTES ---
+  {
+    path: "/admin/profile",
+    element: (
+      <RoleBasedRoute allowedRoles={['Admin']}>
+        <AdminLayout><AdminProfile /></AdminLayout>
+      </RoleBasedRoute>
+    ),
+  },
+  {
+    path: "/admin/notifications",
+    element: (
+      <RoleBasedRoute allowedRoles={['Admin']}>
+        <AdminLayout><AdminNotifications /></AdminLayout>
+      </RoleBasedRoute>
+    ),
+  },
   {
     path: "/admin/dashboard",
     element: (
