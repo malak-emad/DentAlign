@@ -1,22 +1,29 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import styles from "./VisitTimer.module.css";
 
 export default function VisitTimer({ onTick }) {
   const [seconds, setSeconds] = useState(0);
   const [paused, setPaused] = useState(false);
+  const onTickRef = useRef(onTick);
+
+  // Update ref when onTick changes
+  useEffect(() => {
+    onTickRef.current = onTick;
+  }, [onTick]);
 
   useEffect(() => {
     if (paused) return;
 
     const interval = setInterval(() => {
       setSeconds((s) => {
-        onTick(s + 1);
-        return s + 1;
+        const newSeconds = s + 1;
+        onTickRef.current(newSeconds);
+        return newSeconds;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [paused, onTick]);
+  }, [paused]);
 
   const formatTime = (s) =>
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;

@@ -160,6 +160,14 @@ class AppointmentListView(generics.ListAPIView):
         return queryset.order_by('start_time')
 
 
+class AppointmentDetailView(generics.RetrieveUpdateAPIView):
+    """Retrieve and update appointment details"""
+    queryset = Appointment.objects.all()
+    serializer_class = AppointmentSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'appointment_id'
+
+
 class TreatmentListView(generics.ListCreateAPIView):
     """List and create treatments"""
     queryset = Treatment.objects.all()

@@ -121,6 +121,18 @@ export const staffApi = {
     }
   },
 
+  updateAppointment: async (appointmentId, updateData) => {
+    try {
+      return await makeAuthenticatedRequest(`/appointments/${appointmentId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(updateData),
+      });
+    } catch (error) {
+      console.error('Failed to update appointment:', error);
+      throw error;
+    }
+  },
+
   // Get current staff profile
   getProfile: async () => {
     try {

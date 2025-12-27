@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styles from "./ClinicSession.module.css";
 import PatientsTable from "../components/PatientsTable";  // Adjust path if needed
 import CurrentPatientCard from "../components/CurrentPatientCard";
@@ -13,6 +13,11 @@ export default function ClinicSession() {
   const [upcoming, setUpcoming] = useState([]);
   const [seenToday, setSeenToday] = useState([]);
   const [treatmentsMap, setTreatmentsMap] = useState({});
+  const [visitStartTime, setVisitStartTime] = useState(null);
+
+  const handleTick = useCallback((seconds) => {
+    setVisitDuration(seconds);
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
@@ -177,10 +182,28 @@ export default function ClinicSession() {
     setCurrentPatient(patient);
     setUpcoming(prev => prev.filter(p => p.id !== patient.id));
     setVisitDuration(0);
+    setVisitStartTime(new Date());
   };
 
-  const endVisit = () => {
-    setShowPrescription(true);
+  const endVisit = async () => {
+    if (!currentPatient) return;
+
+    try {
+      // Update appointment in database: set status to completed and end_time to now
+      const updateData = {
+        status: 'completed',
+        end_time: new Date().toISOString(),
+      };
+      await staffApi.updateAppointment(currentPatient.raw.appointment_id, updateData);
+
+      // Open prescription modal
+      setShowPrescription(true);
+    } catch (error) {
+      console.error('Failed to end visit:', error);
+      // Still open modal even if update fails? Or show error.
+      // For now, proceed to open modal
+      setShowPrescription(true);
+    }
   };
 
   const closePrescription = () => {
@@ -226,8 +249,8 @@ export default function ClinicSession() {
         <div className={styles.rightColumn}>
           {currentPatient ? (
             <>
-              <CurrentPatientCard patient={currentPatient} onEndVisit={endVisit} />
-              <VisitTimer onTick={(seconds) => setVisitDuration(seconds)} />
+              <CurrentPatientCard patient={currentPatient} onEndVisit={endVisit} startTime={visitStartTime} />
+              <VisitTimer onTick={handleTick} />
             </>
           ) : (
             <div className={styles.emptyState}>
