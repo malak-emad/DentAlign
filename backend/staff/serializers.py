@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment
+from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment, Service
 
 
 class PatientSerializer(serializers.ModelSerializer):
@@ -80,6 +80,12 @@ class PaymentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = '__all__'
+
+
 # List serializers for dashboard views
 class PatientListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
@@ -111,7 +117,7 @@ class AppointmentListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Appointment
-        fields = ['appointment_id', 'patient_name', 'staff_name', 'nurse_name', 'appointment_date', 'status', 'reason', 'medical_record_id','start_time']
+        fields = ['appointment_id', 'patient', 'patient_name', 'staff', 'staff_name', 'nurse_name', 'appointment_date', 'status', 'reason', 'medical_record_id','start_time']
 
     def get_appointment_date(self, obj):
         # Prefer appointment_date if set, else fallback to start_time

@@ -1,48 +1,63 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./ServiceSelector.module.css";
+import { staffApi } from "../api/staffApi";
 
-const services = [
-  "Consultation",
-  "Dental Cleaning",
-  "Filling",
-  "Extraction",
-  "Root Canal",
-  "Whitening",
-];
-
-export default function ServiceSelector() {
+export default function ServiceSelector({ onSelectionChange }) {
+  const [services, setServices] = useState([]);
   const [selected, setSelected] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await staffApi.getServices();
+        const servicesList = Array.isArray(response) ? response : (response.results || []);
+        setServices(servicesList);
+      } catch (error) {
+        console.error('Failed to fetch services:', error);
+        setServices([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchServices();
+  }, []);
 
   const toggle = (service) => {
-    setSelected((prev) =>
-      prev.includes(service)
-        ? prev.filter((s) => s !== service)
-        : [...prev, service]
-    );
+    const newSelected = selected.includes(service.service_id)
+      ? selected.filter((s) => s !== service.service_id)
+      : [...selected, service.service_id];
+    setSelected(newSelected);
+    if (onSelectionChange) {
+      onSelectionChange(newSelected);
+    }
   };
+
+  if (loading) {
+    return <div>Loading services...</div>;
+  }
 
   return (
     <div className={styles.box}>
-
       <div className={styles.grid}>
-        {services.map((s) => {
-          const isActive = selected.includes(s);
+        {services.map((service) => {
+          const isActive = selected.includes(service.service_id);
 
           return (
             <div
-              key={s}
+              key={service.service_id}
               className={`${styles.item} ${
                 isActive ? styles.active : ""
               }`}
-              onClick={() => toggle(s)}
+              onClick={() => toggle(service)}
             >
               <input
                 type="checkbox"
                 checked={isActive}
-                onChange={() => toggle(s)}
+                onChange={() => toggle(service)}
                 onClick={(e) => e.stopPropagation()}
               />
-              <span className={styles.labelText}>{s}</span>
+              <span className={styles.labelText}>{service.name}</span>
             </div>
           );
         })}

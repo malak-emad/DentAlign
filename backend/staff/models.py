@@ -101,24 +101,16 @@ class Appointment(models.Model):
 class MedicalRecord(models.Model):
     """Model mapping to existing medical_records table"""
     record_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='medical_records')
-    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='medical_records')
-    appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE, blank=True, null=True)
-    record_date = models.DateField(default=timezone.now)
-    chief_complaint = models.TextField(blank=True, null=True)
-    examination_notes = models.TextField(blank=True, null=True)
-    diagnosis_notes = models.TextField(blank=True, null=True)
-    treatment_plan = models.TextField(blank=True, null=True)
-    medications = models.TextField(blank=True, null=True)
-    follow_up_instructions = models.TextField(blank=True, null=True)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='medical_records', db_column='patient_id')
+    created_by = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='created_medical_records', db_column='created_by')
     created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(blank=True, null=True)
 
     class Meta:
         db_table = 'medical_records'
 
     def __str__(self):
-        return f"Record for {self.patient.full_name} - {self.record_date}"
+        return f"Record for {self.patient.full_name} - {self.created_at}"
 
 
 class Treatment(models.Model):

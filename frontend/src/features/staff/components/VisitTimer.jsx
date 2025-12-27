@@ -17,7 +17,8 @@ export default function VisitTimer({ onTick }) {
     const interval = setInterval(() => {
       setSeconds((s) => {
         const newSeconds = s + 1;
-        onTickRef.current(newSeconds);
+        // Defer the callback to avoid setState during render
+        setTimeout(() => onTickRef.current(newSeconds), 0);
         return newSeconds;
       });
     }, 1000);
