@@ -130,6 +130,7 @@ class AppointmentListView(generics.ListAPIView):
         start_time_gte = self.request.query_params.get('start_time__gte', None)
         status_filter = self.request.query_params.get('status', None)
         staff_id = self.request.query_params.get('staff', None)
+        patient_id = self.request.query_params.get('patient', None)
 
         if date:
             try:
@@ -172,6 +173,20 @@ class AppointmentListView(generics.ListAPIView):
             except Exception:
                 # Fall back to username or email on the related user
                 queryset = queryset.filter(Q(staff__user__username=staff_id) | Q(staff__user__email=staff_id))
+
+        # Handle patient filter
+        if patient_id and patient_id not in ('null', 'undefined', ''):
+            try:
+                import uuid as _uuid
+                _uuid.UUID(patient_id)
+                queryset = queryset.filter(patient__patient_id=patient_id)
+            except Exception:
+                # If not a valid UUID, try to match by name or other fields
+                queryset = queryset.filter(
+                    Q(patient__first_name__icontains=patient_id) |
+                    Q(patient__last_name__icontains=patient_id) |
+                    Q(patient__email__icontains=patient_id)
+                )
 
         return queryset.order_by('start_time')
 

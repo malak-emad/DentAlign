@@ -198,6 +198,18 @@ export const staffApi = {
   },
 
   // Diagnosis APIs
+  getDiagnoses: async (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    
+    try {
+      return await makeAuthenticatedRequest(`/diagnoses/${queryString}`);
+    } catch (error) {
+      console.error('Failed to fetch diagnoses:', error);
+      throw error;
+    }
+  },
+
   createDiagnosis: async (diagnosisData) => {
     try {
       return await makeAuthenticatedRequest('/diagnoses/', {

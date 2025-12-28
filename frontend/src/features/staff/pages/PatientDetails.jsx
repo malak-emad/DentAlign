@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { staffApi } from "../api/staffApi";
+import MedicalHistoryModal from "../components/MedicalHistoryModal";
 import styles from "./PatientDetails.module.css";
 
 export default function PatientProfile() {
@@ -9,27 +10,7 @@ export default function PatientProfile() {
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // =========================
-  // Mocked Medical History
-  // =========================
-  const mockMedicalHistory = {
-    conditions: ["Hypertension", "Type 2 Diabetes"],
-    allergies: ["Penicillin", "Peanuts"],
-    medications: [
-      { name: "Metformin", dose: "500 mg", frequency: "Twice daily" },
-      { name: "Amlodipine", dose: "5 mg", frequency: "Once daily" }
-    ],
-    surgeries: [{ name: "Appendectomy", year: 2018 }],
-    familyHistory: ["Heart Disease (Father)", "Diabetes (Mother)"],
-    lifestyle: {
-      smoking: "Non-smoker",
-      alcohol: "Occasional",
-      exercise: "Moderate"
-    },
-    notes: "Patient advised regular blood sugar monitoring.",
-    lastUpdated: "2024-11-12"
-  };
+  const [showMedicalHistory, setShowMedicalHistory] = useState(false);
 
   useEffect(() => {
     const fetchPatientDetails = async () => {
@@ -48,6 +29,14 @@ export default function PatientProfile() {
 
     if (id) fetchPatientDetails();
   }, [id]);
+
+  const handleShowMedicalHistory = () => {
+    setShowMedicalHistory(true);
+  };
+
+  const handleCloseMedicalHistory = () => {
+    setShowMedicalHistory(false);
+  };
 
   if (loading) {
     return (
@@ -154,51 +143,17 @@ export default function PatientProfile() {
         {tab === "history" && (
           <div className={styles.tabContent}>
             <h3>Medical History</h3>
-
-            <div className={styles.historySection}>
-              <strong>Chronic Conditions</strong>
-              <ul>{mockMedicalHistory.conditions.map((c, i) => <li key={i}>{c}</li>)}</ul>
+            <div className={styles.medicalHistoryContainer}>
+              <button
+                onClick={handleShowMedicalHistory}
+                className={styles.medicalHistoryBtn}
+              >
+                View Complete Medical History
+              </button>
+              <p className={styles.medicalHistoryNote}>
+                Click the button above to view the patient's complete medical history including chronic conditions, allergies, medications, past surgeries, and procedures.
+              </p>
             </div>
-
-            <div className={styles.historySection}>
-              <strong>Allergies</strong>
-              <ul>{mockMedicalHistory.allergies.map((a, i) => <li key={i}>{a}</li>)}</ul>
-            </div>
-
-            <div className={styles.historySection}>
-              <strong>Current Medications</strong>
-              <ul>
-                {mockMedicalHistory.medications.map((m, i) => (
-                  <li key={i}>{m.name} – {m.dose} ({m.frequency})</li>
-                ))}
-              </ul>
-            </div>
-
-            <div className={styles.historySection}>
-              <strong>Past Surgeries</strong>
-              <ul>{mockMedicalHistory.surgeries.map((s, i) => <li key={i}>{s.name} ({s.year})</li>)}</ul>
-            </div>
-
-            <div className={styles.historySection}>
-              <strong>Family History</strong>
-              <ul>{mockMedicalHistory.familyHistory.map((f, i) => <li key={i}>{f}</li>)}</ul>
-            </div>
-
-            <div className={styles.historySection}>
-              <strong>Lifestyle</strong>
-              <p>Smoking: {mockMedicalHistory.lifestyle.smoking}</p>
-              <p>Alcohol: {mockMedicalHistory.lifestyle.alcohol}</p>
-              <p>Exercise: {mockMedicalHistory.lifestyle.exercise}</p>
-            </div>
-
-            <div className={styles.historySection}>
-              <strong>Clinical Notes</strong>
-              <p>{mockMedicalHistory.notes}</p>
-            </div>
-
-            <p className={styles.lastUpdated}>
-              Last updated: {mockMedicalHistory.lastUpdated}
-            </p>
           </div>
         )}
 
@@ -226,6 +181,14 @@ export default function PatientProfile() {
           </div>
         )}
       </div>
+
+      {/* ================= MEDICAL HISTORY MODAL ================= */}
+      {showMedicalHistory && patient && (
+        <MedicalHistoryModal
+          patient={patient}
+          onClose={handleCloseMedicalHistory}
+        />
+      )}
     </div>
   );
 }

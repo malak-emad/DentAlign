@@ -4,6 +4,7 @@ import PatientsTable from "../components/PatientsTable";
 import CurrentPatientCard from "../components/CurrentPatientCard";
 import VisitTimer from "../components/VisitTimer";
 import PrescriptionModal from "../components/PrescriptionModal";
+import MedicalHistoryModal from "../components/MedicalHistoryModal";
 import { staffApi } from "../api/staffApi";
 
 export default function ClinicSession() {
@@ -12,33 +13,13 @@ export default function ClinicSession() {
 
   // ✅ ADDED (medical history popup)
   const [showMedicalHistory, setShowMedicalHistory] = useState(false);
+  const [medicalHistoryPatient, setMedicalHistoryPatient] = useState(null);
 
   const [visitDuration, setVisitDuration] = useState(0);
   const [upcoming, setUpcoming] = useState([]);
   const [seenToday, setSeenToday] = useState([]);
   const [treatmentsMap, setTreatmentsMap] = useState({});
   const [visitStartTime, setVisitStartTime] = useState(null);
-
-  // =========================
-  // MOCKED MEDICAL HISTORY
-  // =========================
-  const mockMedicalHistory = {
-    conditions: ["Hypertension", "Type 2 Diabetes"],
-    allergies: ["Penicillin", "Peanuts"],
-    medications: [
-      { name: "Metformin", dose: "500 mg", frequency: "Twice daily" },
-      { name: "Amlodipine", dose: "5 mg", frequency: "Once daily" }
-    ],
-    surgeries: [{ name: "Appendectomy", year: 2018 }],
-    familyHistory: ["Heart Disease (Father)", "Diabetes (Mother)"],
-    lifestyle: {
-      smoking: "Non-smoker",
-      alcohol: "Occasional",
-      exercise: "Moderate"
-    },
-    notes: "Patient advised regular blood sugar monitoring.",
-    lastUpdated: "2024-11-12"
-  };
 
   const handleTick = useCallback((seconds) => {
     setVisitDuration(seconds);
@@ -208,6 +189,16 @@ export default function ClinicSession() {
     setCurrentPatient(null);
   };
 
+  const handleShowMedicalHistory = (patient) => {
+    setMedicalHistoryPatient(patient);
+    setShowMedicalHistory(true);
+  };
+
+  const handleCloseMedicalHistory = () => {
+    setShowMedicalHistory(false);
+    setMedicalHistoryPatient(null);
+  };
+
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Clinic Session</h1>
@@ -220,7 +211,7 @@ export default function ClinicSession() {
               patients={upcoming}
               type="action"
               onAction={startVisit}
-              onShowMedicalHistory={() => setShowMedicalHistory(true)}
+              onShowMedicalHistory={handleShowMedicalHistory}
             />
           </div>
 
@@ -229,7 +220,7 @@ export default function ClinicSession() {
               title="Patients Seen Today"
               patients={seenToday}
               type="view"
-              onShowMedicalHistory={() => setShowMedicalHistory(true)}
+              onShowMedicalHistory={handleShowMedicalHistory}
             />
           </div>
         </div>
@@ -241,7 +232,7 @@ export default function ClinicSession() {
                 patient={currentPatient}
                 onEndVisit={endVisit}
                 startTime={visitStartTime}
-                onShowMedicalHistory={() => setShowMedicalHistory(true)} // ✅ ONLY ADDITION
+                onShowMedicalHistory={() => handleShowMedicalHistory(currentPatient)} // ✅ ONLY ADDITION
               />
               <VisitTimer onTick={handleTick} />
             </>
@@ -254,50 +245,11 @@ export default function ClinicSession() {
       </div>
 
       {/* ================= MEDICAL HISTORY MODAL ================= */}
-      {showMedicalHistory && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h2>Medical History</h2>
-
-            <section>
-              <strong>Conditions</strong>
-              <ul>
-                {mockMedicalHistory.conditions.map((c, i) => (
-                  <li key={i}>{c}</li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <strong>Allergies</strong>
-              <ul>
-                {mockMedicalHistory.allergies.map((a, i) => (
-                  <li key={i}>{a}</li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <strong>Medications</strong>
-              <ul>
-                {mockMedicalHistory.medications.map((m, i) => (
-                  <li key={i}>
-                    {m.name} – {m.dose} ({m.frequency})
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <strong>Clinical Notes</strong>
-              <p>{mockMedicalHistory.notes}</p>
-            </section>
-
-            <button onClick={() => setShowMedicalHistory(false)}>
-              Close
-            </button>
-          </div>
-        </div>
+      {showMedicalHistory && medicalHistoryPatient && (
+        <MedicalHistoryModal
+          patient={medicalHistoryPatient}
+          onClose={handleCloseMedicalHistory}
+        />
       )}
 
       {/* ================= PRESCRIPTION MODAL ================= */}
