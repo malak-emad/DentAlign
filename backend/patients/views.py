@@ -10,7 +10,7 @@ import json
 
 from staff.serializers import ChronicConditionSerializer, AllergySerializer, PastSurgerySerializer
 
-from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff, Service, Diagnosis, ChronicCondition, Allergy, PastSurgery, ChronicCondition, Allergy, PastSurgery
+from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff, Service, Diagnosis, ChronicCondition, Allergy, PastSurgery
 
 
 class IsPatientOnly:
@@ -820,18 +820,13 @@ def patient_medical_history(request):
             # Get medical record data
             diagnosis = 'No diagnosis recorded'
             outcome_parts = []
+            radiology_needed = False  # Initialize default value
             
             if appointment.medical_record:
                 medical_record = appointment.medical_record
                 
-                # Build diagnosis from examination and diagnosis notes
-                diagnosis_parts = []
-                if medical_record.examination_notes:
-                    diagnosis_parts.append(f"Examination: {medical_record.examination_notes}")
-                if medical_record.diagnosis_notes:
-                    diagnosis_parts.append(f"Diagnosis: {medical_record.diagnosis_notes}")
-                if diagnosis_parts:
-                    diagnosis = ' | '.join(diagnosis_parts)
+                # Use chief complaint as the diagnosis
+                diagnosis = medical_record.chief_complaint or 'No diagnosis recorded'
                 
                 # Build outcome from outcome, treatment plan, and follow-up
                 if medical_record.outcome:
@@ -845,6 +840,18 @@ def patient_medical_history(request):
             
             outcome = ' | '.join(outcome_parts) if outcome_parts else 'No outcome recorded'
             
+            # Get treatments for this appointment
+            treatments = []
+            appointment_treatments = Treatment.objects.filter(appointment=appointment).select_related('service')
+            for treatment in appointment_treatments:
+                service_name = treatment.service.name if treatment.service else f"Treatment {treatment.treatment_id[:8]}"
+                treatments.append({
+                    'id': str(treatment.treatment_id),
+                    'name': service_name,
+                    'code': str(treatment.service.service_id) if treatment.service else 'Unknown',
+                    'cost': float(treatment.actual_cost) if treatment.actual_cost else 0
+                })
+            
             visit_data = {
                 'id': str(appointment.appointment_id),
                 'date': appointment.start_time.strftime('%Y-%m-%d') if appointment.start_time else None,
@@ -853,7 +860,8 @@ def patient_medical_history(request):
                 'reason': appointment.medical_record.chief_complaint if appointment.medical_record and appointment.medical_record.chief_complaint else (appointment.reason or 'General Consultation'),
                 'diagnosis': diagnosis,
                 'outcome': outcome,
-                'radiology_needed': radiology_needed
+                'radiology_needed': radiology_needed,
+                'treatments': treatments
             }
             visits.append(visit_data)
         

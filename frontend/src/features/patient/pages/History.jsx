@@ -283,11 +283,16 @@ export default function PatientHistory({
                   <div className={styles.itemHeader}>
                     <div>
                       <div className={styles.itemDoctor}>{visit.doctor}</div>
+                      {visit.treatments && visit.treatments.length > 0 && (
+                        <div className={styles.itemTreatments}>
+                          {visit.treatments.map(treatment => (
+                            <span key={treatment.id} className={styles.treatmentTag}>
+                              {treatment.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       <div className={styles.itemReason}>{visit.reason}</div>
-                    </div>
-                    <div className={styles.itemTags}>
-                      {visit.outcome && <span className={styles.tag}>{visit.outcome.split(" · ")[0]}</span>}
-                      {visit.radiology_needed && <span className={styles.tag}>X-Ray</span>}
                     </div>
                   </div>
 

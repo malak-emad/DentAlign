@@ -8,6 +8,11 @@ export default function MedicalHistoryModal({ patient, onClose }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!patient) {
+      console.log('No patient provided to MedicalHistoryModal');
+      return;
+    }
+    
     const fetchMedicalHistory = async () => {
       // Handle different patient object structures
       const patientId = patient?.raw?.patient || patient?.patient_id;
@@ -15,6 +20,8 @@ export default function MedicalHistoryModal({ patient, onClose }) {
       if (!patientId) {
         console.log('No patient ID found');
         console.log('Patient object:', patient);
+        setError('Unable to load medical history: patient ID not found');
+        setLoading(false);
         return;
       }
 

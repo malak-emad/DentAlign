@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./StaffReports.module.css";
 import { staffApi } from "../api/staffApi";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 export default function StaffReports() {
   const [stats, setStats] = useState([]);
@@ -51,13 +52,19 @@ export default function StaffReports() {
         ))}
       </div>
 
-      <div>
+      <div className={styles.chartSection}>
         <h3>Monthly Appointments</h3>
-        <ul>
-          {monthlyData.map((item, index) => (
-            <li key={index}>{item.month}: {item.appointments} appointments</li>
-          ))}
-        </ul>
+        <div className={styles.chartBox}>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="appointments" fill="#8884d8" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );

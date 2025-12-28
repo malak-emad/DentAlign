@@ -75,10 +75,39 @@ export default function DoctorSignup() {
         console.log('✅ Doctor registration successful:', result.data);
       } else {
         // Handle API errors
-        if (result.data && typeof result.data === 'object') {
-          setErrors(result.data);
+        if (result.error && typeof result.error === 'object') {
+          // Handle validation errors from backend
+          if (result.error.details) {
+            // Map backend validation errors to form fields
+            const apiErrors = {};
+            Object.keys(result.error.details).forEach(key => {
+              const errorValue = result.error.details[key];
+              let errorMessage = 'Invalid input';
+              
+              if (Array.isArray(errorValue) && errorValue.length > 0) {
+                errorMessage = String(errorValue[0]);
+              } else if (typeof errorValue === 'string') {
+                errorMessage = errorValue;
+              } else if (typeof errorValue === 'object' && errorValue !== null) {
+                // Handle nested error objects
+                errorMessage = 'Invalid input';
+              }
+              
+              if (key === 'email') apiErrors.email = errorMessage;
+              else if (key === 'password') apiErrors.password = errorMessage;
+              else if (key === 'medical_license_number') apiErrors.medicalLicenseNumber = errorMessage;
+              else if (key === 'name') apiErrors.name = errorMessage;
+              else if (!apiErrors.general) apiErrors.general = errorMessage;
+            });
+            setErrors(apiErrors);
+          } else if (result.error.error) {
+            setErrors({ general: typeof result.error.error === 'string' ? result.error.error : 'Registration failed. Please try again.' });
+          } else {
+            setErrors({ general: 'Registration failed. Please try again.' });
+          }
         } else {
-          setErrors({ general: result.error || 'Registration failed. Please try again.' });
+          const errorMsg = typeof result.error === 'string' ? result.error : 'Registration failed. Please try again.';
+          setErrors({ general: errorMsg });
         }
         console.error('❌ Doctor registration failed:', result);
       }

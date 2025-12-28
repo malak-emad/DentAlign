@@ -373,37 +373,49 @@ def staff_list(request):
 @permission_classes([AllowAny])
 def user_approvals_list(request):
     """
-    API endpoint for admin user approvals - from staff table
-    Gets all staff (verified and unverified) for approval management
+    API endpoint for admin user approvals - from users table
+    Gets users with role 'doctor', 'staff', or 'nurse' who have is_verified=False
     """
     try:
-        # Get all staff with related user data (both verified and unverified)
-        staff_members = Staff.objects.select_related('user').order_by('-created_at')
-        
+        from accounts.models import User, Role
+
+        # Get doctor, staff, and nurse roles
+        doctor_role = Role.objects.filter(name__iexact='doctor').first()
+        staff_role = Role.objects.filter(name__iexact='staff').first()
+        nurse_role = Role.objects.filter(name__iexact='nurse').first()
+
+        # Get users with doctor/staff/nurse role who are not verified
+        pending_users = User.objects.filter(
+            Q(role=doctor_role) | Q(role=staff_role) | Q(role=nurse_role),
+            is_verified=False
+        ).select_related('role').order_by('-created_at')
+
         approvals_data = []
-        for staff in staff_members:
-            if staff.user:  # Make sure user exists
-                approval_item = {
-                    'id': str(staff.staff_id),
-                    'user_id': str(staff.user.user_id),
-                    'full_name': f"{staff.first_name or ''} {staff.last_name or ''}".strip() or staff.user.username,
-                    'first_name': staff.first_name or '',
-                    'last_name': staff.last_name or '',
-                    'email': staff.user.email,
-                    'role': staff.role_title or 'Staff',
-                    'specialization': staff.specialization or 'General',
-                    'license_number': staff.license_number or 'N/A',
-                    'phone': staff.phone or 'N/A',
-                    'is_verified': staff.user.is_verified,
-                    'created_at': staff.created_at.strftime('%Y-%m-%d') if staff.created_at else 'Unknown'
-                }
-                approvals_data.append(approval_item)
-        
+        for user in pending_users:
+            approval_item = {
+                'id': str(user.user_id),
+                'user_id': str(user.user_id),
+                'full_name': user.full_name,
+                'first_name': user.full_name.split(' ')[0] if user.full_name else '',
+                'last_name': ' '.join(user.full_name.split(' ')[1:]) if user.full_name and len(user.full_name.split(' ')) > 1 else '',
+                'email': user.email,
+                'role': user.role.name if user.role else 'Unknown',
+                'specialization': '',  # Will be filled when staff record is created
+                'license_number': user.medical_license_number or 'N/A',
+                'phone': '',  # Will be filled when staff record is created
+                'is_verified': user.is_verified,
+                'created_at': user.created_at.strftime('%Y-%m-%d') if user.created_at else 'Unknown'
+            }
+            approvals_data.append(approval_item)
+
         # Get some summary stats
         total_requests = len(approvals_data)
-        pending_requests = len([s for s in approvals_data if not s['is_verified']])
-        approved_requests = total_requests - pending_requests
-        
+        pending_requests = total_requests  # All are pending since we filter by is_verified=False
+        approved_requests = User.objects.filter(
+            Q(role=doctor_role) | Q(role=staff_role) | Q(role=nurse_role),
+            is_verified=True
+        ).count()
+
         response_data = {
             'requests': approvals_data,
             'summary': {
@@ -412,11 +424,11 @@ def user_approvals_list(request):
                 'approved_requests': approved_requests
             }
         }
-        
+
         return Response(response_data, status=status.HTTP_200_OK)
     except Exception as e:
         return Response(
-            {'error': f'User approvals error: {str(e)}'}, 
+            {'error': f'User approvals error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -425,30 +437,54 @@ def user_approvals_list(request):
 @permission_classes([AllowAny])
 def approve_user(request, user_id):
     """
-    API endpoint to approve a user by setting is_verified=True
+    API endpoint to approve a user by setting is_verified=True and creating staff record
     """
     try:
-        # Import User model
         from accounts.models import User
-        
-        user = User.objects.get(user_id=user_id)
-        user.is_verified = True
-        user.save()
-        
-        return Response({
-            'message': f'User {user.username} has been approved successfully',
-            'user_id': str(user.user_id),
-            'is_verified': user.is_verified
-        }, status=status.HTTP_200_OK)
-        
+        from django.db import transaction
+
+        with transaction.atomic():
+            user = User.objects.select_related('role').get(user_id=user_id)
+
+            # Set user as approved and verified
+            user.is_approved = True
+            user.is_verified = True
+            user.save()
+
+            # Create staff record if it doesn't exist
+            staff, created = Staff.objects.get_or_create(
+                user=user,
+                defaults={
+                    'first_name': user.full_name.split(' ')[0] if user.full_name else '',
+                    'last_name': ' '.join(user.full_name.split(' ')[1:]) if user.full_name and len(user.full_name.split(' ')) > 1 else '',
+                    'role_title': user.role.name if user.role else 'Staff',
+                    'license_number': user.medical_license_number,
+                    'is_active': True  # Set as active by default after approval
+                }
+            )
+
+            # If staff record already existed, make sure it's active
+            if not created:
+                staff.is_active = True
+                staff.save()
+
+            return Response({
+                'message': f'User {user.full_name} has been approved and verified successfully',
+                'user_id': str(user.user_id),
+                'is_approved': user.is_approved,
+                'is_verified': user.is_verified,
+                'staff_created': created,
+                'staff_id': str(staff.staff_id) if staff else None
+            }, status=status.HTTP_200_OK)
+
     except User.DoesNotExist:
         return Response(
-            {'error': 'User not found'}, 
+            {'error': 'User not found'},
             status=status.HTTP_404_NOT_FOUND
         )
     except Exception as e:
         return Response(
-            {'error': f'Approval error: {str(e)}'}, 
+            {'error': f'Approval error: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

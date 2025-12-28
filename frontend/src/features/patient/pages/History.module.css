@@ -189,6 +189,23 @@
   border: 1px solid rgba(227,199,161,0.4);
 }
 
+.itemTreatments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.treatmentTag {
+  background: #e8f4fd;
+  color: #0A345C;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(10, 52, 92, 0.2);
+  font-weight: 500;
+}
+
 /* item body */
 .itemBody {
   margin-top: 12px;
