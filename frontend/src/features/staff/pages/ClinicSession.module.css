@@ -59,3 +59,100 @@
   color: #6b7280;
   font-size: 15px;
 }
+
+/* ===============================
+   MEDICAL HISTORY MODAL
+   =============================== */
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #ffffff;
+  width: 600px;
+  max-width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeInScale 0.25s ease;
+}
+
+.modal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+}
+
+.modal section {
+  margin-bottom: 18px;
+}
+
+.modal section strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--primary);
+  font-size: 15px;
+}
+
+.modal ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.modal ul li {
+  font-size: 14px;
+  color: #444;
+  margin-bottom: 4px;
+}
+
+.modal p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Close Button */
+.modal button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.modal button:hover {
+  background: #082a4a;
+}
+
+/* Animation */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

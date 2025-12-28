@@ -1,7 +1,13 @@
 import React from "react";
 import styles from "./PatientsTable.module.css";
 
-export default function PatientsTable({ title, patients, type, onAction }) {
+export default function PatientsTable({
+  title,
+  patients,
+  type,
+  onAction,
+  onShowMedicalHistory 
+}) {
   return (
     <div className={styles.card}>
       <h3>{title}</h3>
@@ -22,7 +28,10 @@ export default function PatientsTable({ title, patients, type, onAction }) {
               <td>{p.time}</td>
               <td>{p.services}</td>
               <td>
-                <button className={styles.historyBtn}>
+                <button
+                  className={styles.historyBtn}
+                  onClick={() => onShowMedicalHistory && onShowMedicalHistory(p)} // ✅ FIX
+                >
                   Show Medical History
                 </button>
               </td>

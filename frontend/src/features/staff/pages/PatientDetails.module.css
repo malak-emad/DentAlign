@@ -377,3 +377,30 @@
 .invoiceDetails p {
   margin: 4px 0;
 } */
+
+.historySection {
+  margin-bottom: 18px;
+}
+
+.historySection strong {
+  color: #0A345C;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.historySection ul {
+  padding-left: 20px;
+  margin: 0;
+}
+
+.historySection li {
+  margin-bottom: 4px;
+  color: #444;
+}
+
+.lastUpdated {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #777;
+  font-style: italic;
+}

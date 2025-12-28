@@ -1,22 +1,152 @@
+/* ===== PAGE LAYOUT ===== */
 .container {
-  padding: 32px;
+  padding: 32px 40px;
   max-width: 1400px;
   margin: 0 auto;
+  min-height: 100vh;
 }
 
+/* ===== HEADER ===== */
 .header {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .header h1 {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
-  color: #0A345C;
+  color: #0f172a;
   margin: 0;
 }
 
 .header p {
   font-size: 14px;
   color: #64748b;
-  margin-top: 6px;
+  margin-top: 8px;
+  max-width: 600px;
+}
+
+/* ===== TABS (Patients / Doctors) ===== */
+/* ===== TABS (Patients / Doctors) ===== */
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* Default tab */
+.tabs button {
+  padding: 10px 20px;
+  background: #0a345c;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+}
+
+/* Hover */
+.tabs button:hover {
+  background: #08243e;
+}
+
+/* Active tab */
+.activeTab {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);
+}
+
+/* Prevent hover overriding active */
+.activeTab:hover {
+  background: #2563eb;
+  transform: none;
+}
+
+
+/* ===== DOCTORS PAGE ===== */
+.doctorsPage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== DOCTOR CARD ===== */
+.doctorCard {
+  background: #ffffff;
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.doctorCard:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Doctor name (if you use h3 inside card) */
+.doctorCard h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* ===== DAYS SELECTION ===== */
+.daysRow {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 8px;
+  flex-wrap: wrap;
+}
+
+.day,
+.dayActive {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.day {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.day:hover {
+  background: #e2e8f0;
+}
+
+.dayActive {
+  background: #2563eb;
+  color: #ffffff;
+  border: 1px solid #2563eb;
+}
+
+/* ===== TIME ROW ===== */
+.timeRow {
+  display: flex;
+  gap: 20px;
+  margin-top: 14px;
+  align-items: center;
+}
+
+/* Optional: inputs inside timeRow */
+.timeRow input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.timeRow input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }

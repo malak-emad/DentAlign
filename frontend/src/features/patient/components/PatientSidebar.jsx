@@ -56,7 +56,7 @@ export default function PatientSidebar({ open, onClose }) {
           </NavLink>
         </li>
 
-        <li>
+        {/* <li>
           <NavLink
             to="/patient/radiology"
             className={({ isActive }) => (isActive ? styles.active : "")}
@@ -64,7 +64,7 @@ export default function PatientSidebar({ open, onClose }) {
           >
             Radiology Images
           </NavLink>
-        </li>
+        </li> */}
 
         <li>
           <NavLink
