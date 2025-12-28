@@ -281,6 +281,36 @@
   font-size: 13px;
 }
 
+.chipContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.chipEmpty {
+  padding: 12px;
+  color: #6b7684;
+  font-style: italic;
+  text-align: center;
+}
+
+.itemEditBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  border-radius: 4px;
+  color: #6b7684;
+  transition: background-color 0.2s;
+}
+
+.itemEditBtn:hover {
+  background-color: #f0f0f0;
+  color: var(--brand);
+}
+
 /* allergy */
 .allergy {
   padding: 8px 10px;
@@ -328,5 +358,87 @@
 
 /* small empty */
 .empty { color: var(--muted); font-size: 14px; }
+
+/* Edit form styles */
+.editForm {
+  padding: 16px;
+  background: var(--soft-bg);
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.formInput, .formTextarea, .formSelect {
+  padding: 10px 12px;
+  border: 1px solid #d6dde6;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.formTextarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.formSelect {
+  background: white;
+  cursor: pointer;
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.saveBtn, .deleteBtn, .cancelBtn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveBtn {
+  background: var(--accent);
+  color: white;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #0044cc;
+}
+
+.saveBtn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.deleteBtn {
+  background: #dc3545;
+  color: white;
+}
+
+.deleteBtn:hover {
+  background: #c82333;
+}
+
+.cancelBtn {
+  background: #6c757d;
+  color: white;
+}
+
+.cancelBtn:hover {
+  background: #5a6268;
+}
 
 

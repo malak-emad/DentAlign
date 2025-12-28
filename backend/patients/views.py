@@ -1,4 +1,4 @@
-from rest_framework import status
+from rest_framework import status, generics, serializers
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -8,7 +8,9 @@ from datetime import datetime, timedelta, time
 from django.db.models import Q
 import json
 
-from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff, Service, Service
+from staff.serializers import ChronicConditionSerializer, AllergySerializer, PastSurgerySerializer
+
+from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff, Service, Diagnosis, ChronicCondition, Allergy, PastSurgery, ChronicCondition, Allergy, PastSurgery
 
 
 class IsPatientOnly:
@@ -57,7 +59,7 @@ def dashboard_stats(request):
                     'doctor_name': 'Dr. Smith',
                     'notes': 'Regular dental cleaning completed'
                 },
-                'medical_records_count': 5
+                'medical_records_count': 3
             }
             
             return Response(mock_data, status=status.HTTP_200_OK)
@@ -87,7 +89,7 @@ def dashboard_stats(request):
         # Get recent treatments
         recent_treatments = Treatment.objects.filter(
             appointment__patient=patient
-        ).order_by('-appointment__start_time')[:3]
+        ).select_related('appointment__staff__user', 'appointment__medical_record', 'service').order_by('-appointment__start_time')[:3]
         
         # Get medical records count
         medical_records_count = MedicalRecord.objects.filter(patient=patient).count()
@@ -109,12 +111,37 @@ def dashboard_stats(request):
         latest_treatment = None
         if recent_treatments:
             treatment = recent_treatments[0]
+            # Get doctor name from appointment staff
+            doctor_name = 'N/A'
+            if treatment.appointment and treatment.appointment.staff:
+                doctor_name = f"Dr. {treatment.appointment.staff.first_name or ''} {treatment.appointment.staff.last_name or ''}".strip()
+                if not doctor_name or doctor_name == 'Dr.':
+                    doctor_name = f"Dr. {treatment.appointment.staff.user.full_name}" if treatment.appointment.staff.user else 'N/A'
+            
+            # Get notes from medical record if available
+            notes = 'Treatment completed'
+            if treatment.appointment and treatment.appointment.medical_record:
+                medical_record = treatment.appointment.medical_record
+                if medical_record.chief_complaint:
+                    notes = medical_record.chief_complaint
+                elif medical_record.examination_notes:
+                    notes = medical_record.examination_notes
+            
+            # Get total cost from invoice instead of individual treatment cost
+            total_cost = 0
+            if treatment.appointment:
+                invoice = Invoice.objects.filter(appointment=treatment.appointment).first()
+                if invoice:
+                    total_cost = float(invoice.total_amount)
+            
             latest_treatment = {
                 'treatment_id': str(treatment.treatment_id),
-                'treatment_type': treatment.service.name if treatment.service else 'Unknown',
-                'description': treatment.description,
+                'treatment_type': treatment.service.name if treatment.service else 'Unknown Treatment',
+                'description': treatment.description or f'{treatment.service.name if treatment.service else "Treatment"} service',
                 'date': treatment.appointment.start_time.strftime('%Y-%m-%d') if treatment.appointment else None,
-                'cost': float(treatment.cost) if treatment.cost else 0
+                'doctor_name': doctor_name,
+                'notes': notes,
+                'cost': total_cost
             }
         
         dashboard_data = {
@@ -695,3 +722,282 @@ def patient_bills(request):
             {'error': f'Patient bills error: {str(e)}'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def patient_prescriptions(request):
+    """Get patient's prescriptions/medical history"""
+    try:
+        # Try to get patient profile
+        try:
+            patient = Patient.objects.get(user=request.user)
+        except Patient.DoesNotExist:
+            # Return empty list if no patient profile
+            return Response({'prescriptions': []}, status=status.HTTP_200_OK)
+        
+        # Get patient's medical records (only those created by doctors, not nurses)
+        medical_records = MedicalRecord.objects.filter(
+            patient=patient
+        ).select_related('created_by', 'staff').exclude(
+            created_by__role_title='Nurse'
+        ).order_by('-record_date')
+        
+        prescriptions_data = []
+        for record in medical_records:
+            # Get doctor name from created_by field
+            doctor_name = 'N/A'
+            if record.created_by:
+                doctor_name = f"Dr. {record.created_by.first_name or ''} {record.created_by.last_name or ''}".strip()
+                if not doctor_name or doctor_name == 'Dr.':
+                    doctor_name = f"Dr. {record.created_by.user.full_name}" if record.created_by.user else 'N/A'
+            elif record.staff:
+                # Fallback to staff field if created_by is not set
+                doctor_name = f"Dr. {record.staff.first_name or ''} {record.staff.last_name or ''}".strip()
+                if not doctor_name or doctor_name == 'Dr.':
+                    doctor_name = f"Dr. {record.staff.user.full_name}" if record.staff.user else 'N/A'
+            
+            # Get diagnosis from chief_complaint
+            diagnosis = record.chief_complaint or 'No diagnosis recorded'
+            
+            # Get medications from diagnosis table
+            diagnoses = Diagnosis.objects.filter(record=record)
+            medications = []
+            for diag in diagnoses:
+                if diag.notes and diag.notes.strip():
+                    medications.append(diag.notes.strip())
+            
+            prescription_data = {
+                'id': str(record.record_id),
+                'doctor': doctor_name,
+                'date': record.record_date.strftime('%Y-%m-%d') if record.record_date else None,
+                'diagnosis': diagnosis,
+                'medications': medications,
+                'record_date': record.record_date.strftime('%Y-%m-%d') if record.record_date else None,
+            }
+            prescriptions_data.append(prescription_data)
+        
+        return Response({'prescriptions': prescriptions_data}, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Patient prescriptions error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def patient_medical_history(request):
+    """Get patient's complete medical history including visits, conditions, and radiology"""
+    try:
+        # Try to get patient profile
+        try:
+            patient = Patient.objects.get(user=request.user)
+        except Patient.DoesNotExist:
+            # Return empty data if no patient profile
+            return Response({
+                'visits': [],
+                'conditions': {'chronic': [], 'allergies': [], 'surgeries': []},
+                'radiology': []
+            }, status=status.HTTP_200_OK)
+        
+        # Get visit history (appointments with medical records)
+        visits = []
+        appointments = Appointment.objects.filter(
+            patient=patient
+        ).select_related('staff__user', 'medical_record').order_by('-start_time')
+        
+        for appointment in appointments:
+            # Get doctor name
+            doctor_name = 'N/A'
+            if appointment.staff:
+                doctor_name = f"Dr. {appointment.staff.first_name or ''} {appointment.staff.last_name or ''}".strip()
+                if not doctor_name or doctor_name == 'Dr.':
+                    doctor_name = f"Dr. {appointment.staff.user.full_name}" if appointment.staff.user else 'N/A'
+            
+            # Get medical record data
+            diagnosis = 'No diagnosis recorded'
+            outcome_parts = []
+            
+            if appointment.medical_record:
+                medical_record = appointment.medical_record
+                
+                # Build diagnosis from examination and diagnosis notes
+                diagnosis_parts = []
+                if medical_record.examination_notes:
+                    diagnosis_parts.append(f"Examination: {medical_record.examination_notes}")
+                if medical_record.diagnosis_notes:
+                    diagnosis_parts.append(f"Diagnosis: {medical_record.diagnosis_notes}")
+                if diagnosis_parts:
+                    diagnosis = ' | '.join(diagnosis_parts)
+                
+                # Build outcome from outcome, treatment plan, and follow-up
+                if medical_record.outcome:
+                    outcome_parts.append(medical_record.outcome)
+                if medical_record.treatment_plan:
+                    outcome_parts.append(f"Treatment: {medical_record.treatment_plan}")
+                if medical_record.follow_up_instructions:
+                    outcome_parts.append(f"Follow-up: {medical_record.follow_up_instructions}")
+                
+                radiology_needed = medical_record.radiology_needed
+            
+            outcome = ' | '.join(outcome_parts) if outcome_parts else 'No outcome recorded'
+            
+            visit_data = {
+                'id': str(appointment.appointment_id),
+                'date': appointment.start_time.strftime('%Y-%m-%d') if appointment.start_time else None,
+                'time': appointment.start_time.strftime('%H:%M') if appointment.start_time else None,
+                'doctor': doctor_name,
+                'reason': appointment.medical_record.chief_complaint if appointment.medical_record and appointment.medical_record.chief_complaint else (appointment.reason or 'General Consultation'),
+                'diagnosis': diagnosis,
+                'outcome': outcome,
+                'radiology_needed': radiology_needed
+            }
+            visits.append(visit_data)
+        
+        # Get conditions from dedicated models
+        chronic_conditions = ChronicCondition.objects.filter(patient=patient).values(
+            'condition_id', 'condition_name', 'notes', 'status'
+        )
+        allergies = Allergy.objects.filter(patient=patient).values(
+            'allergy_id', 'allergen_name', 'severity', 'reaction'
+        )
+        surgeries = PastSurgery.objects.filter(patient=patient).values(
+            'surgery_id', 'procedure_name', 'surgery_date', 'surgeon', 'hospital', 'notes', 'complications'
+        ).order_by('-surgery_date')
+        
+        # Get radiology summary (appointments where radiology was needed)
+        radiology = []
+        radiology_appointments = Appointment.objects.filter(
+            patient=patient,
+            medical_record__radiology_needed=True
+        ).select_related('medical_record').order_by('-start_time')
+        
+        for appointment in radiology_appointments:
+            if appointment.medical_record:
+                rad_data = {
+                    'id': f"rad_{appointment.appointment_id}",
+                    'type': 'Dental Radiology',
+                    'date': appointment.start_time.strftime('%Y-%m-%d') if appointment.start_time else None,
+                    'status': 'Completed' if appointment.status == 'completed' else 'Pending'
+                }
+                radiology.append(rad_data)
+        
+        return Response({
+            'visits': visits,
+            'conditions': {
+                'chronic': chronic_conditions,
+                'allergies': allergies,
+                'surgeries': surgeries
+            },
+            'radiology': radiology
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': f'Patient medical history error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+class ChronicConditionListView(generics.ListCreateAPIView):
+    """List and create chronic conditions for the current patient"""
+    serializer_class = ChronicConditionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            return ChronicCondition.objects.filter(patient=patient).order_by('condition_name')
+        except Patient.DoesNotExist:
+            return ChronicCondition.objects.none()
+
+    def perform_create(self, serializer):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            serializer.save(patient=patient)
+        except Patient.DoesNotExist:
+            raise serializers.ValidationError("Patient profile not found")
+
+
+class ChronicConditionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, and delete chronic condition for the current patient"""
+    serializer_class = ChronicConditionSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'condition_id'
+
+    def get_queryset(self):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            return ChronicCondition.objects.filter(patient=patient)
+        except Patient.DoesNotExist:
+            return ChronicCondition.objects.none()
+
+
+class AllergyListView(generics.ListCreateAPIView):
+    """List and create allergies for the current patient"""
+    serializer_class = AllergySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            return Allergy.objects.filter(patient=patient).order_by('allergen_name')
+        except Patient.DoesNotExist:
+            return Allergy.objects.none()
+
+    def perform_create(self, serializer):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            serializer.save(patient=patient)
+        except Patient.DoesNotExist:
+            raise serializers.ValidationError("Patient profile not found")
+
+
+class AllergyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, and delete allergy for the current patient"""
+    serializer_class = AllergySerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'allergy_id'
+
+    def get_queryset(self):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            return Allergy.objects.filter(patient=patient)
+        except Patient.DoesNotExist:
+            return Allergy.objects.none()
+
+
+class PastSurgeryListView(generics.ListCreateAPIView):
+    """List and create past surgeries for the current patient"""
+    serializer_class = PastSurgerySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            return PastSurgery.objects.filter(patient=patient).order_by('-surgery_date')
+        except Patient.DoesNotExist:
+            return PastSurgery.objects.none()
+
+    def perform_create(self, serializer):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            serializer.save(patient=patient)
+        except Patient.DoesNotExist:
+            raise serializers.ValidationError("Patient profile not found")
+
+
+class PastSurgeryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, and delete past surgery for the current patient"""
+    serializer_class = PastSurgerySerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'surgery_id'
+
+    def get_queryset(self):
+        try:
+            patient = Patient.objects.get(user=self.request.user)
+            return PastSurgery.objects.filter(patient=patient)
+        except Patient.DoesNotExist:
+            return PastSurgery.objects.none()

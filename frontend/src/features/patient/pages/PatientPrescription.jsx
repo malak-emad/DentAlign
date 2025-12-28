@@ -1,28 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./PatientPrescriptions.module.css";
+import { patientApi } from "../api/patientApi";
 
 export default function PatientPrescriptions() {
-  const prescriptions = [
-    {
-      id: 1,
-      doctor: "Dr. Sarah Ahmed",
-      date: "2026-01-15",
-      diagnosis: "Acute Sinus Infection",
-      medications: [
-        { name: "Amoxicillin 500mg", freq: "2× daily", duration: "7 days" },
-        { name: "Ibuprofen 400mg", freq: "3× daily", duration: "5 days" },
-      ],
-    },
-    {
-      id: 2,
-      doctor: "Dr. Omar Khaled",
-      date: "2025-12-02",
-      diagnosis: "Seasonal Allergies",
-      medications: [
-        { name: "Cetirizine 10mg", freq: "1× daily", duration: "14 days" },
-      ],
-    },
-  ];
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPrescriptions = async () => {
+      try {
+        setLoading(true);
+        const response = await patientApi.getTreatments();
+        setPrescriptions(response.prescriptions || []);
+      } catch (err) {
+        console.error('Failed to fetch prescriptions:', err);
+        setError('Failed to load prescriptions');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrescriptions();
+  }, []);
 
   // ---------- FILTER STATE ----------
   const [doctorFilter, setDoctorFilter] = useState("");
@@ -32,11 +32,29 @@ export default function PatientPrescriptions() {
     .filter((p) => (doctorFilter ? p.doctor === doctorFilter : true))
     .sort((a, b) =>
       sortOrder === "desc"
-        ? new Date(b.date) - new Date(a.date)
-        : new Date(a.date) - new Date(b.date)
+        ? new Date(b.date || b.record_date) - new Date(a.date || a.record_date)
+        : new Date(a.date || a.record_date) - new Date(b.date || b.record_date)
     );
 
   const uniqueDoctors = [...new Set(prescriptions.map((p) => p.doctor))];
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Prescriptions</h1>
+        <div className={styles.loading}>Loading prescriptions...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Prescriptions</h1>
+        <div className={styles.error}>{error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -73,7 +91,7 @@ export default function PatientPrescriptions() {
             <div className={styles.cardHeader}>
               <h3 className={styles.doctor}>{p.doctor}</h3>
               <span className={styles.date}>
-                {new Date(p.date).toLocaleDateString()}
+                {p.date ? new Date(p.date).toLocaleDateString() : 'Date not available'}
               </span>
             </div>
 
@@ -86,12 +104,17 @@ export default function PatientPrescriptions() {
             <div className={styles.medSection}>
               <h4 className={styles.medTitle}>Medications</h4>
               <div className={styles.medList}>
-                {p.medications.map((m, index) => (
-                  <div key={index} className={styles.medItem}>
-                    <strong>{m.name}</strong>
-                    <span>{m.freq} — {m.duration}</span>
+                {p.medications && p.medications.length > 0 ? (
+                  p.medications.map((medication, index) => (
+                    <div key={index} className={styles.medItem}>
+                      <strong>{medication}</strong>
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.medItem}>
+                    <em>No medications prescribed</em>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 

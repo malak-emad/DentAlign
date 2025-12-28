@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment, Service
+from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment, Service, ChronicCondition, Allergy, PastSurgery
 
 
 class PatientSerializer(serializers.ModelSerializer):
@@ -196,3 +196,21 @@ class InvoiceSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = ['invoice_id', 'patient_name', 'total_amount', 'paid_amount', 'balance_due', 'status', 'due_date', 'is_overdue']
+
+
+class ChronicConditionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChronicCondition
+        exclude = ['patient']  # Patient is set automatically in the view
+
+
+class AllergySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Allergy
+        exclude = ['patient']  # Patient is set automatically in the view
+
+
+class PastSurgerySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PastSurgery
+        exclude = ['patient']  # Patient is set automatically in the view

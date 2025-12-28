@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { patientApi } from "../api/patientApi";
 import styles from "./PatientProfile.module.css";
 
 export default function PatientProfile() {
+  const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
   const [formData, setFormData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(false);
+  const [hasMedicalData, setHasMedicalData] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -25,7 +28,24 @@ export default function PatientProfile() {
       }
     };
 
+    const checkMedicalData = async () => {
+      try {
+        const medicalData = await patientApi.getMedicalHistory();
+        // Check if patient has any medical data
+        const hasData = 
+          (medicalData.conditions?.chronic?.length > 0) ||
+          (medicalData.conditions?.allergies?.length > 0) ||
+          (medicalData.conditions?.surgeries?.length > 0) ||
+          (medicalData.visits?.length > 0);
+        setHasMedicalData(hasData);
+      } catch (err) {
+        console.error("Failed to check medical data:", err);
+        setHasMedicalData(false);
+      }
+    };
+
     fetchProfile();
+    checkMedicalData();
   }, []);
 
   const handleChange = (field, value) => {
@@ -255,7 +275,14 @@ export default function PatientProfile() {
               }
             />
           ) : (
-            <p>{patient.medical_history || "No medical history on file"}</p>
+            <div>
+              <button 
+                className={styles.historyBtn}
+                onClick={() => navigate('/patient/history')}
+              >
+                {hasMedicalData ? 'Go To History' : 'Fill'}
+              </button>
+            </div>
           )}
         </div>
       </div>

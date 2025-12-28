@@ -31,18 +31,6 @@ urlpatterns = [
     # Diagnosis endpoints
     path('diagnoses/', views.DiagnosisListView.as_view(), name='diagnosis_list'),
     
-    # Medical record endpoints
-    path('medical-records/', views.MedicalRecordListView.as_view(), name='medical_record_list'),
-    
-    # Diagnosis endpoints
-    path('diagnoses/', views.DiagnosisListView.as_view(), name='diagnosis_list'),
-    
-    # Medical record endpoints
-    path('medical-records/', views.MedicalRecordListView.as_view(), name='medical_record_list'),
-    
-    # Diagnosis endpoints
-    path('diagnoses/', views.DiagnosisListView.as_view(), name='diagnosis_list'),
-    
     # Invoice endpoints
     path('invoices/', views.InvoiceListView.as_view(), name='invoice_list'),
     path('invoices/<uuid:invoice_id>/', views.InvoiceDetailView.as_view(), name='invoice_detail'),
@@ -53,4 +41,12 @@ urlpatterns = [
     
     # Service endpoints
     path('services/', views.ServiceListView.as_view(), name='service_list'),
+    
+    # Medical History endpoints
+    path('chronic-conditions/', views.ChronicConditionListView.as_view(), name='chronic_condition_list'),
+    path('chronic-conditions/<int:id>/', views.ChronicConditionDetailView.as_view(), name='chronic_condition_detail'),
+    path('allergies/', views.AllergyListView.as_view(), name='allergy_list'),
+    path('allergies/<int:id>/', views.AllergyDetailView.as_view(), name='allergy_detail'),
+    path('past-surgeries/', views.PastSurgeryListView.as_view(), name='past_surgery_list'),
+    path('past-surgeries/<int:id>/', views.PastSurgeryDetailView.as_view(), name='past_surgery_detail'),
 ]

@@ -2,6 +2,13 @@ from django.db import models
 from django.utils import timezone
 from accounts.models import User
 import uuid
+from django.db.models import Func
+
+
+class UUIDGenerateV4(Func):
+    """PostgreSQL uuid_generate_v4() function for UUID primary keys"""
+    function = 'uuid_generate_v4'
+    output_field = models.UUIDField()
 
 def default_record_date():
     return timezone.now().date()
@@ -194,6 +201,79 @@ class Diagnosis(models.Model):
     @property
     def patient(self):
         return self.record.patient
+
+
+class ChronicCondition(models.Model):
+    """Model for patient's chronic conditions"""
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('resolved', 'Resolved'),
+        ('managed', 'Managed'),
+        ('unknown', 'Unknown'),
+    ]
+    
+    condition_id = models.UUIDField(primary_key=True, default=UUIDGenerateV4, editable=False)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='chronic_conditions')
+    condition_name = models.CharField(max_length=200)
+    notes = models.TextField(blank=True, null=True)
+    diagnosed_date = models.DateField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'chronic_conditions'
+        ordering = ['-diagnosed_date', 'condition_name']
+
+    def __str__(self):
+        return f"{self.condition_name} - {self.patient.full_name}"
+
+
+class Allergy(models.Model):
+    """Model for patient's allergies"""
+    SEVERITY_CHOICES = [
+        ('mild', 'Mild'),
+        ('moderate', 'Moderate'),
+        ('severe', 'Severe'),
+        ('unknown', 'Unknown'),
+    ]
+    
+    allergy_id = models.UUIDField(primary_key=True, default=UUIDGenerateV4, editable=False)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='allergies')
+    allergen_name = models.CharField(max_length=200)
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES, default='unknown')
+    reaction = models.TextField(blank=True, null=True)
+    diagnosed_date = models.DateField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'allergies'
+        ordering = ['allergen_name']
+
+    def __str__(self):
+        return f"{self.allergen_name} - {self.patient.full_name}"
+
+
+class PastSurgery(models.Model):
+    """Model for patient's past surgeries"""
+    surgery_id = models.UUIDField(primary_key=True, default=UUIDGenerateV4, editable=False)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='past_surgeries')
+    procedure_name = models.CharField(max_length=300)
+    surgery_date = models.DateField()
+    surgeon = models.CharField(max_length=200, blank=True, null=True)
+    hospital = models.CharField(max_length=200, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    complications = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'past_surgeries'
+        ordering = ['-surgery_date']
+
+    def __str__(self):
+        return f"{self.procedure_name} - {self.patient.full_name} ({self.surgery_date})"
 
 
 class Invoice(models.Model):

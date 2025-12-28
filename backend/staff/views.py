@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from .permissions import IsDoctorOnly, IsDoctorOrStaff
 
-from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment, Service
+from .models import Patient, Staff, Appointment, MedicalRecord, Treatment, Diagnosis, Invoice, Payment, Service, ChronicCondition, Allergy, PastSurgery
 from .serializers import (
     PatientSerializer, PatientListSerializer,
     StaffSerializer,
@@ -18,7 +18,8 @@ from .serializers import (
     DiagnosisSerializer,
     InvoiceSerializer, InvoiceSummarySerializer,
     PaymentSerializer,
-    ServiceSerializer
+    ServiceSerializer,
+    ChronicConditionSerializer, AllergySerializer, PastSurgerySerializer
 )
 
 
@@ -471,3 +472,81 @@ def recalculate_invoice_total(request, appointment_id):
         )
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ChronicConditionListView(generics.ListCreateAPIView):
+    """List and create chronic conditions for a patient"""
+    serializer_class = ChronicConditionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = ChronicCondition.objects.all()
+        patient_id = self.request.query_params.get('patient_id', None)
+        if patient_id:
+            queryset = queryset.filter(patient__patient_id=patient_id)
+        return queryset.order_by('condition_name')
+
+    def perform_create(self, serializer):
+        patient_id = self.request.data.get('patient_id')
+        patient = Patient.objects.get(patient_id=patient_id)
+        serializer.save(patient=patient)
+
+
+class ChronicConditionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, and delete chronic condition"""
+    queryset = ChronicCondition.objects.all()
+    serializer_class = ChronicConditionSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+
+class AllergyListView(generics.ListCreateAPIView):
+    """List and create allergies for a patient"""
+    serializer_class = AllergySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = Allergy.objects.all()
+        patient_id = self.request.query_params.get('patient_id', None)
+        if patient_id:
+            queryset = queryset.filter(patient__patient_id=patient_id)
+        return queryset.order_by('allergen_name')
+
+    def perform_create(self, serializer):
+        patient_id = self.request.data.get('patient_id')
+        patient = Patient.objects.get(patient_id=patient_id)
+        serializer.save(patient=patient)
+
+
+class AllergyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, and delete allergy"""
+    queryset = Allergy.objects.all()
+    serializer_class = AllergySerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+
+class PastSurgeryListView(generics.ListCreateAPIView):
+    """List and create past surgeries for a patient"""
+    serializer_class = PastSurgerySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = PastSurgery.objects.all()
+        patient_id = self.request.query_params.get('patient_id', None)
+        if patient_id:
+            queryset = queryset.filter(patient__patient_id=patient_id)
+        return queryset.order_by('-surgery_date')
+
+    def perform_create(self, serializer):
+        patient_id = self.request.data.get('patient_id')
+        patient = Patient.objects.get(patient_id=patient_id)
+        serializer.save(patient=patient)
+
+
+class PastSurgeryDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, and delete past surgery"""
+    queryset = PastSurgery.objects.all()
+    serializer_class = PastSurgerySerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'

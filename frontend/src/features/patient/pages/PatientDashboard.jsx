@@ -125,13 +125,19 @@ export default function PatientDashboard() {
 
           {latest_treatment ? (
             <div className={styles.details}>
-              <p><strong>Treatment:</strong> {latest_treatment.treatment_code}</p>
+              <p><strong>Treatment:</strong> {latest_treatment.treatment_type}</p>
               <p><strong>Description:</strong> {latest_treatment.description}</p>
+              {latest_treatment.doctor_name && (
+                <p><strong>Doctor:</strong> {latest_treatment.doctor_name}</p>
+              )}
               {latest_treatment.date && (
                 <p><strong>Date:</strong> {new Date(latest_treatment.date).toLocaleDateString()}</p>
               )}
+              {latest_treatment.notes && (
+                <p><strong>Notes:</strong> {latest_treatment.notes}</p>
+              )}
               {latest_treatment.cost > 0 && (
-                <p><strong>Cost:</strong> ${latest_treatment.cost.toFixed(2)}</p>
+                <p><strong>Total Cost:</strong> ${latest_treatment.cost.toFixed(2)}</p>
               )}
             </div>
           ) : (

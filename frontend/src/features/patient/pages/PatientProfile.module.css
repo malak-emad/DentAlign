@@ -309,6 +309,22 @@
   color: white;
 }
 
+.historyBtn {
+  background: #0A345C;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.historyBtn:hover {
+  background: #0d4069;
+}
+
 .editActions {
   display: flex;
   gap: 10px;

@@ -54,7 +54,15 @@ const makeAuthenticatedRequest = async (url, options = {}) => {
       window.location.href = '/login';
       throw new Error('Authentication failed');
     }
+    if (response.status === 404) {
+      throw new Error('Resource not found');
+    }
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  // Handle responses with no content (like 204 No Content)
+  if (response.status === 204) {
+    return null;
   }
 
   return response.json();
@@ -157,7 +165,7 @@ export const patientApi = {
   // Get treatments/prescriptions
   getTreatments: async () => {
     try {
-      return await makeAuthenticatedRequest('/treatments/');
+      return await makeAuthenticatedRequest('/prescriptions/');
     } catch (error) {
       console.error('Failed to fetch treatments:', error);
       throw error;
@@ -180,6 +188,139 @@ export const patientApi = {
       return await makeAuthenticatedRequest('/medical-history/');
     } catch (error) {
       console.error('Failed to fetch medical history:', error);
+      throw error;
+    }
+  },
+
+  // Medical History Management APIs
+  getChronicConditions: async () => {
+    try {
+      return await makeAuthenticatedRequest('/chronic-conditions/');
+    } catch (error) {
+      console.error('Failed to fetch chronic conditions:', error);
+      throw error;
+    }
+  },
+
+  createChronicCondition: async (conditionData) => {
+    try {
+      return await makeAuthenticatedRequest('/chronic-conditions/', {
+        method: 'POST',
+        body: JSON.stringify(conditionData),
+      });
+    } catch (error) {
+      console.error('Failed to create chronic condition:', error);
+      throw error;
+    }
+  },
+
+  updateChronicCondition: async (id, conditionData) => {
+    try {
+      return await makeAuthenticatedRequest(`/chronic-conditions/${id}/`, {
+        method: 'PUT',
+        body: JSON.stringify(conditionData),
+      });
+    } catch (error) {
+      console.error('Failed to update chronic condition:', error);
+      throw error;
+    }
+  },
+
+  deleteChronicCondition: async (id) => {
+    try {
+      return await makeAuthenticatedRequest(`/chronic-conditions/${id}/`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete chronic condition:', error);
+      throw error;
+    }
+  },
+
+  getAllergies: async () => {
+    try {
+      return await makeAuthenticatedRequest('/allergies/');
+    } catch (error) {
+      console.error('Failed to fetch allergies:', error);
+      throw error;
+    }
+  },
+
+  createAllergy: async (allergyData) => {
+    try {
+      return await makeAuthenticatedRequest('/allergies/', {
+        method: 'POST',
+        body: JSON.stringify(allergyData),
+      });
+    } catch (error) {
+      console.error('Failed to create allergy:', error);
+      throw error;
+    }
+  },
+
+  updateAllergy: async (id, allergyData) => {
+    try {
+      return await makeAuthenticatedRequest(`/allergies/${id}/`, {
+        method: 'PUT',
+        body: JSON.stringify(allergyData),
+      });
+    } catch (error) {
+      console.error('Failed to update allergy:', error);
+      throw error;
+    }
+  },
+
+  deleteAllergy: async (id) => {
+    try {
+      return await makeAuthenticatedRequest(`/allergies/${id}/`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete allergy:', error);
+      throw error;
+    }
+  },
+
+  getPastSurgeries: async () => {
+    try {
+      return await makeAuthenticatedRequest('/past-surgeries/');
+    } catch (error) {
+      console.error('Failed to fetch past surgeries:', error);
+      throw error;
+    }
+  },
+
+  createPastSurgery: async (surgeryData) => {
+    try {
+      return await makeAuthenticatedRequest('/past-surgeries/', {
+        method: 'POST',
+        body: JSON.stringify(surgeryData),
+      });
+    } catch (error) {
+      console.error('Failed to create past surgery:', error);
+      throw error;
+    }
+  },
+
+  updatePastSurgery: async (id, surgeryData) => {
+    try {
+      return await makeAuthenticatedRequest(`/past-surgeries/${id}/`, {
+        method: 'PUT',
+        body: JSON.stringify(surgeryData),
+      });
+    } catch (error) {
+      console.error('Failed to update past surgery:', error);
+      throw error;
+    }
+  },
+
+  deletePastSurgery: async (id) => {
+    try {
+      return await makeAuthenticatedRequest(`/past-surgeries/${id}/`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error('Failed to delete past surgery:', error);
       throw error;
     }
   },
