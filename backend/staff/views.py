@@ -25,12 +25,22 @@ from .serializers import (
 
 class PatientListView(generics.ListAPIView):
     """List all patients for staff dashboard"""
-    queryset = Patient.objects.all()
     serializer_class = PatientListSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        # Get the current staff member
+        try:
+            current_staff = Staff.objects.get(user=self.request.user)
+        except Staff.DoesNotExist:
+            # If no staff profile, return empty queryset
+            return Patient.objects.none()
+        
+        # Only return patients that have had appointments with this staff member
+        queryset = Patient.objects.filter(
+            appointments__staff=current_staff
+        ).distinct()
+        
         search = self.request.query_params.get('search', None)
         if search:
             queryset = queryset.filter(
@@ -101,7 +111,7 @@ class PatientDetailView(generics.RetrieveAPIView):
 
 class NursesListView(generics.ListAPIView):
     """List active nurses for selection"""
-    queryset = Staff.objects.filter(role_title='Nurse')
+    queryset = Staff.objects.filter(role_title='Nurse', is_active=True)
     serializer_class = StaffSerializer
     permission_classes = [IsAuthenticated]
 
@@ -298,45 +308,61 @@ def dashboard_stats(request):
     today = timezone.now().date()
     this_month = timezone.now().replace(day=1).date()
     
+    # Get the current staff member
+    try:
+        current_staff = Staff.objects.get(user=request.user)
+    except Staff.DoesNotExist:
+        return Response({'error': 'Staff profile not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Get patients that have had appointments with this staff member
+    patients_with_appointments = Patient.objects.filter(
+        appointments__staff=current_staff
+    ).distinct()
+    
     stats = {
         'patients': {
-            'total': Patient.objects.count(),
-            'new_this_month': Patient.objects.filter(created_at__date__gte=this_month).count(),
+            'total': patients_with_appointments.count(),
+            'new_this_month': patients_with_appointments.filter(created_at__date__gte=this_month).count(),
         },
         'appointments': {
-            'today': Appointment.objects.filter(start_time__date=today).count(),
+            'today': Appointment.objects.filter(staff=current_staff, start_time__date=today).count(),
             'this_week': Appointment.objects.filter(
+                staff=current_staff,
                 start_time__date__gte=today - timedelta(days=7)
             ).count(),
-            'pending': Appointment.objects.filter(status='scheduled').count(),
+            'pending': Appointment.objects.filter(staff=current_staff, status='scheduled').count(),
         },
         'treatments': {
-            'this_month': Treatment.objects.filter(created_at__date__gte=this_month).count(),
+            'this_month': Treatment.objects.filter(appointment__staff=current_staff, created_at__date__gte=this_month).count(),
             'total_revenue': Treatment.objects.filter(
+                appointment__staff=current_staff,
                 created_at__date__gte=this_month
             ).aggregate(total=Sum('actual_cost'))['total'] or 0,
         },
         'invoices': {
-            'pending': Invoice.objects.filter(status='pending').count(),
+            'pending': Invoice.objects.filter(appointment__staff=current_staff, status='pending').count(),
             'overdue': Invoice.objects.filter(
+                appointment__staff=current_staff,
                 due_date__lt=today, 
                 status__in=['pending', 'partially_paid']
             ).count(),
             'total_outstanding': Invoice.objects.filter(
+                appointment__staff=current_staff,
                 status__in=['pending', 'partially_paid']
             ).aggregate(total=Sum('total_amount'))['total'] or 0,
         },
         'recent_activities': {
             'recent_appointments': AppointmentListSerializer(
-                Appointment.objects.filter(start_time__date=today).order_by('start_time')[:5],
+                Appointment.objects.filter(staff=current_staff, start_time__date=today).order_by('start_time')[:5],
                 many=True
             ).data,
             'recent_treatments': TreatmentSummarySerializer(
-                Treatment.objects.filter(created_at__date=today).order_by('-created_at')[:5],
+                Treatment.objects.filter(appointment__staff=current_staff, created_at__date=today).order_by('-created_at')[:5],
                 many=True
             ).data,
             'overdue_invoices': InvoiceSummarySerializer(
                 Invoice.objects.filter(
+                    appointment__staff=current_staff,
                     due_date__lt=today,
                     status__in=['pending', 'partially_paid']
                 ).order_by('due_date')[:5],
@@ -346,6 +372,85 @@ def dashboard_stats(request):
     }
     
     return Response(stats)
+
+
+@api_view(['GET'])
+@permission_classes([IsDoctorOnly])
+def staff_reports(request):
+    """Get reports and metrics for the current doctor"""
+    try:
+        # Get current staff member
+        staff = request.user.staff_profile
+        
+        today = timezone.now().date()
+        current_month = today.replace(day=1)
+        
+        # 1. Total patients - count unique patients from appointments
+        total_patients = Appointment.objects.filter(staff=staff).values('patient').distinct().count()
+        
+        # 2. Appointments this month
+        appointments_this_month = Appointment.objects.filter(
+            staff=staff,
+            start_time__date__gte=current_month,
+            start_time__date__lte=today
+        ).count()
+        
+        # 3. Completed appointments
+        completed_appointments = Appointment.objects.filter(
+            staff=staff,
+            status='completed'
+        ).count()
+        
+        # 4. Most common treatment - from treatments table
+        most_common_treatment = Treatment.objects.filter(
+            appointment__staff=staff
+        ).values('service__name').annotate(
+            count=Count('service__name')
+        ).order_by('-count').first()
+        
+        most_common_treatment_name = most_common_treatment['service__name'] if most_common_treatment else 'No treatments yet'
+        
+        # Monthly data for chart (last 6 months)
+        monthly_data = []
+        for i in range(5, -1, -1):
+            month_date = today.replace(day=1) - timedelta(days=i*30)
+            month_name = month_date.strftime('%b')
+            month_start = month_date.replace(day=1)
+            month_end = (month_date.replace(day=1) + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+            
+            appointments_count = Appointment.objects.filter(
+                staff=staff,
+                start_time__date__gte=month_start,
+                start_time__date__lte=month_end
+            ).count()
+            
+            monthly_data.append({
+                'month': month_name,
+                'appointments': appointments_count
+            })
+        
+        response_data = {
+            'stats': [
+                {'label': 'Total Patients', 'value': total_patients},
+                {'label': 'Appointments This Month', 'value': appointments_this_month},
+                {'label': 'Completed Appointments', 'value': completed_appointments},
+                {'label': 'Most Common Treatment', 'value': most_common_treatment_name},
+            ],
+            'monthlyData': monthly_data
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+        
+    except Staff.DoesNotExist:
+        return Response(
+            {'error': 'Staff profile not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Reports error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['GET'])

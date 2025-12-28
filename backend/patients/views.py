@@ -329,7 +329,8 @@ def available_doctors(request):
         
         # Get all staff who can see patients
         staff_members = Staff.objects.filter(
-            role_title__in=['Doctor', 'Dentist', 'Orthodontist', 'Radiologist']
+            role_title__in=['Doctor', 'Dentist', 'Orthodontist', 'Radiologist'],
+            is_active=True
         ).select_related('user')
         
         doctors_data = []

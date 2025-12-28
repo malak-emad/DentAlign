@@ -104,10 +104,10 @@ export default function Login() {
             navigate('/patient/dashboard');
           }, 2000);
         } else if (userRole === 'Admin') {
-          // Admin: Redirect to homepage
+          // Admin: Redirect to admin dashboard
           setSuccessMessage(`Welcome back, Admin ${user.full_name}! Redirecting...`);
           setTimeout(() => {
-            navigate('/');
+            navigate('/admin/dashboard');
           }, 2000);
         } else {
           // Unknown role: Still redirect but log for debugging

@@ -66,6 +66,7 @@ class MedicalRecordSerializer(serializers.ModelSerializer):
 class TreatmentSerializer(serializers.ModelSerializer):
     patient_name = serializers.CharField(source='appointment.patient.full_name', read_only=True)
     staff_name = serializers.CharField(source='appointment.staff.user.full_name', read_only=True)
+    service_name = serializers.CharField(source='service.name', read_only=True)
     appointment_date = serializers.SerializerMethodField()
     
     class Meta:

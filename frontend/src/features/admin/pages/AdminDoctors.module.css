@@ -60,6 +60,7 @@
    =========================== */
 .card {
   display: flex;
+  flex-direction: column;
   gap: 20px;
   padding: 22px;
   background: #ffffff;
@@ -69,6 +70,12 @@
   color: inherit;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
   transition: all 0.25s ease;
+  position: relative;
+}
+
+.card:hover {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
 .card:hover {
@@ -158,6 +165,70 @@
 .inactive {
   background: #fde2e2;
   color: #991b1b;
+}
+
+/* ===========================
+   ACTIONS
+   =========================== */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  pointer-events: none;
+}
+
+.actionBtn {
+  pointer-events: auto;
+}
+
+.actionBtn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.deactivateBtn {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #f59e0b;
+}
+
+.deactivateBtn:hover {
+  background: #fde68a;
+}
+
+.activateBtn {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #22c55e;
+}
+
+.activateBtn:hover {
+  background: #bbf7d0;
+}
+
+.deleteBtn {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #f87171;
+}
+
+.deleteBtn:hover {
+  background: #fecaca;
+}
+
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f3f4f6 !important;
+  color: #9ca3af !important;
+  border-color: #d1d5db !important;
 }
 
 /* ===========================

@@ -145,7 +145,7 @@ export default function AdminInvoices() {
               </div>
 
               {/* ACTIONS */}
-              {view === "invoices" && inv.status === "pending" && (
+              {view === "invoices" && (inv.status === "pending" || inv.status === "unpaid") && (
                 <div className={styles.actions}>
                   <button
                     className={styles.approve}

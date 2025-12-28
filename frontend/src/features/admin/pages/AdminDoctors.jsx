@@ -10,6 +10,14 @@ export default function AdminDoctors() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const getInitials = (name = "") => {
+    const clean = name.replace("Dr.", "").replace("Nurse", "").trim();
+    const parts = clean.split(" ");
+    return parts.length > 1
+      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+      : parts[0]?.[0]?.toUpperCase() || "?";
+  };
+
   useEffect(() => {
     const fetchStaffData = async () => {
       try {
@@ -43,12 +51,51 @@ export default function AdminDoctors() {
     return roleMatch && searchMatch;
   });
 
-  const getInitials = (name = "") => {
-    const clean = name.replace("Dr.", "").replace("Nurse", "").trim();
-    const parts = clean.split(" ");
-    return parts.length > 1
-      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
-      : parts[0]?.[0]?.toUpperCase() || "?";
+  const handleToggleActive = async (staffId, isCurrentlyActive, e) => {
+    e.preventDefault(); // Prevent navigation
+    e.stopPropagation();
+    
+    const action = isCurrentlyActive ? 'deactivate' : 'activate';
+    const confirmMessage = isCurrentlyActive 
+      ? 'Are you sure you want to deactivate this staff member? They will no longer be active but their data will be preserved.'
+      : 'Are you sure you want to reactivate this staff member? They will become active again.';
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+    
+    try {
+      if (isCurrentlyActive) {
+        await adminApi.deactivateStaff(staffId);
+      } else {
+        await adminApi.activateStaff(staffId);
+      }
+      // Refresh the data
+      const response = await adminApi.getStaff();
+      setStaffData(response.staff || []);
+    } catch (error) {
+      console.error(`Error ${action}ing staff:`, error);
+      alert(`Failed to ${action} staff member`);
+    }
+  };
+
+  const handleDelete = async (staffId, e) => {
+    e.preventDefault(); // Prevent navigation
+    e.stopPropagation();
+    
+    if (!confirm('Are you sure you want to remove this staff member? This will deactivate them and remove their approvals. Their historical data will be preserved.')) {
+      return;
+    }
+    
+    try {
+      await adminApi.deleteStaff(staffId);
+      // Refresh the data
+      const response = await adminApi.getStaff();
+      setStaffData(response.staff || []);
+    } catch (error) {
+      console.error('Error deleting staff:', error);
+      alert('Failed to remove staff member');
+    }
   };
 
   if (loading) {
@@ -104,9 +151,7 @@ export default function AdminDoctors() {
           {filteredData.map((item) => (
             <Link
               key={item.id}
-            //   to={`/admin/${role}s/${item.id}`}
               to={`/admin/staff/${item.role}/${item.id}`}
-
               className={styles.card}
             >
               <div className={styles.avatar}>
@@ -123,6 +168,23 @@ export default function AdminDoctors() {
                 <span className={`${styles.status} ${styles[item.status]}`}>
                   {item.status.replace("_", " ")}
                 </span>
+              </div>
+
+              <div className={styles.actions}>
+                <button
+                  onClick={(e) => handleToggleActive(item.id, item.status === 'active', e)}
+                  className={`${styles.actionBtn} ${
+                    item.status === 'active' ? styles.deactivateBtn : styles.activateBtn
+                  }`}
+                >
+                  {item.status === 'active' ? 'Deactivate' : 'Activate'}
+                </button>
+                <button
+                  onClick={(e) => handleDelete(item.id, e)}
+                  className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                >
+                  Delete
+                </button>
               </div>
             </Link>
           ))}

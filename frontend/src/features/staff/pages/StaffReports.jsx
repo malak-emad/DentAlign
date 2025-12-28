@@ -1,42 +1,47 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import React, { useState, useEffect } from "react";
 import styles from "./StaffReports.module.css";
+import { staffApi } from "../api/staffApi";
 
 export default function StaffReports() {
-  const stats = [
-    { label: "Total Patients", value: 128 },
-    { label: "Appointments This Month", value: 34 },
-    { label: "Completed Appointments", value: 29 },
-    { label: "Most Common Treatment", value: "Teeth Alignment" },
-  ];
+  const [stats, setStats] = useState([]);
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const monthlyData = [
-    { month: "Jan", appointments: 20 },
-    { month: "Feb", appointments: 25 },
-    { month: "Mar", appointments: 30 },
-    { month: "Apr", appointments: 34 },
-    { month: "May", appointments: 28 },
-  ];
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        setLoading(true);
+        const response = await staffApi.getReports();
+        console.log('Reports response:', response); // Debug log
+        setStats(response.stats || []);
+        setMonthlyData(response.monthlyData || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching reports:', err);
+        setError('Failed to load reports data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handlePrint = () => window.print();
+    fetchReports();
+  }, []);
+
+  if (loading) {
+    return <div className={styles.reportsPage}>Loading reports...</div>;
+  }
+
+  if (error) {
+    return <div className={styles.reportsPage}>Error: {error}</div>;
+  }
 
   return (
     <div className={styles.reportsPage}>
-      {/* Header */}
       <div className={styles.header}>
         <h2>Reports & Metrics</h2>
-        <button onClick={handlePrint} className={styles.printBtn}>
-          Print Report
-        </button>
       </div>
 
-      {/* Stats */}
       <div className={styles.statsGrid}>
         {stats.map((item, index) => (
           <div key={index} className={styles.statCard}>
@@ -46,21 +51,13 @@ export default function StaffReports() {
         ))}
       </div>
 
-      {/* Chart */}
-      <div className={styles.chartSection}>
-        <h3>Appointments Overview</h3>
-
-        {/* IMPORTANT: fixed height */}
-        <div style={{ width: "100%", height: 300 }}>
-          <ResponsiveContainer>
-            <BarChart data={monthlyData}>
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="appointments" fill="#0A345C" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+      <div>
+        <h3>Monthly Appointments</h3>
+        <ul>
+          {monthlyData.map((item, index) => (
+            <li key={index}>{item.month}: {item.appointments} appointments</li>
+          ))}
+        </ul>
       </div>
     </div>
   );

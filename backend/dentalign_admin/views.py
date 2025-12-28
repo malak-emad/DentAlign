@@ -41,26 +41,44 @@ def dashboard_stats(request):
             today_appointments = f"Error: {str(e)}"
             
         try:
-            # Revenue from paid_amount in invoices table (exclude cancelled appointments)
-            this_month_revenue_query = Invoice.objects.filter(
-                created_at__date__gte=this_month
-            ).select_related('appointment')
+            # Total revenue from all paid_amount in invoices table (exclude cancelled appointments)
+            total_revenue_query = Invoice.objects.all().select_related('appointment')
             
-            # Calculate revenue excluding cancelled appointments
-            this_month_revenue = 0
-            for invoice in this_month_revenue_query:
+            # Calculate total revenue excluding cancelled appointments
+            total_revenue = 0
+            for invoice in total_revenue_query:
                 # Only count if appointment is not cancelled (or if no appointment linked)
                 if not invoice.appointment or invoice.appointment.status != 'cancelled':
-                    this_month_revenue += float(invoice.paid_amount or 0)
+                    total_revenue += float(invoice.paid_amount or 0)
                     
         except Exception as e:
-            this_month_revenue = f"Error: {str(e)}"
+            total_revenue = f"Error: {str(e)}"
             
         try:
-            # Number of services/treatments
-            total_treatments = Treatment.objects.count()
+            # Number of available services
+            total_services = Service.objects.count()
         except Exception as e:
-            total_treatments = f"Error: {str(e)}"
+            total_services = f"Error: {str(e)}"
+            
+        try:
+            # Recent appointments (last 5 appointments)
+            recent_appointments_query = Appointment.objects.select_related(
+                'patient', 'staff'
+            ).order_by('-start_time')[:5]
+            
+            recent_appointments = []
+            for appointment in recent_appointments_query:
+                appointment_data = {
+                    'appointment_id': str(appointment.appointment_id),
+                    'patientName': f"{appointment.patient.first_name} {appointment.patient.last_name}" if appointment.patient else "Unknown Patient",
+                    'doctorName': f"Dr. {appointment.staff.first_name} {appointment.staff.last_name}" if appointment.staff else "Unknown Doctor",
+                    'time': appointment.start_time.strftime('%b %d, %Y %I:%M %p') if appointment.start_time else "Unknown Time",
+                    'status': appointment.status,
+                    'reason': appointment.reason or "General Consultation"
+                }
+                recent_appointments.append(appointment_data)
+        except Exception as e:
+            recent_appointments = []
         
         # Simple response to debug
         stats = {
@@ -80,18 +98,18 @@ def dashboard_stats(request):
                 'pending': 0,    # Temporarily disabled
             },
             'revenue': {
-                'this_month': this_month_revenue,
-                'last_month': 0,  # Temporarily disabled
+                'total': total_revenue,
+                'this_month': 0,  # Can add monthly breakdown later if needed
                 'growth_percentage': 0,
             },
             'treatments': {
-                'total': total_treatments,
+                'total': total_services,
                 'this_month': 0,  # Can add this later if needed
             },
             'recent_activities': {
-                'recent_appointments': [],  # Temporarily empty
+                'recent_appointments': recent_appointments,
                 'system_overview': {
-                    'activeServices': total_treatments,  # Use total treatments as active services
+                    'activeServices': total_services,  # Use total services as active services
                     'pendingReports': 0,
                     'systemStatus': 'Operational'
                 }
@@ -323,7 +341,7 @@ def staff_list(request):
                 'license_number': staff.license_number or 'N/A',
                 'phone': staff.phone or 'N/A',
                 'email': staff.user.email if staff.user else 'N/A',
-                'status': 'active',  # Default status, can be enhanced later
+                'status': 'active' if staff.is_active else 'inactive',  # Show actual active status
                 'created_at': staff.created_at.strftime('%Y-%m-%d') if staff.created_at else 'Unknown'
             }
             staff_data.append(staff_item)
@@ -613,11 +631,11 @@ def patient_details(request, patient_id):
 @permission_classes([AllowAny])
 def invoices_list(request):
     """
-    API endpoint for admin invoices - invoices pending approval (is_approved IS NULL)
+    API endpoint for admin invoices - invoices pending approval (is_approved=False)
     """
     try:
         # Get invoices pending approval with related data and prefetch treatments
-        invoices = Invoice.objects.filter(is_approved__isnull=True).select_related(
+        invoices = Invoice.objects.filter(is_approved=False).select_related(
             'patient', 'appointment', 'appointment__patient', 'appointment__staff'
         ).prefetch_related('appointment__treatments').order_by('-created_at')
         
@@ -660,12 +678,8 @@ def invoices_list(request):
                 services = []
                 calculated_total = 0.0
             
-            # Determine approval status
+            # Determine approval status - for unapproved invoices in this list, status is 'pending'
             approval_status = 'pending'
-            if invoice.is_approved is True:
-                approval_status = 'approved'
-            elif invoice.is_approved is False:
-                approval_status = 'rejected'
             
             appointment_status = invoice.appointment.status if invoice.appointment else 'N/A'
             invoice_data = {
@@ -877,9 +891,18 @@ def reports_data(request):
         # Total Visits: Count of appointments where status = 'completed'
         total_visits = Appointment.objects.filter(status='completed').count()
         
-        # Active Doctors: Count of staff where role_title contains 'Doctor' or 'Dentist'
+        # Active Doctors: Count of staff where role_title contains 'Doctor' or 'Dentist' AND is_active=True AND user.is_approved=True
         active_doctors = Staff.objects.filter(
-            role_title__iregex=r'(Doctor|Dentist|Orthodontist)'
+            role_title__iregex=r'(Doctor|Dentist|Orthodontist)',
+            is_active=True,
+            user__is_approved=True
+        ).count()
+        
+        # Active Nurses: Count of staff where role_title contains 'Nurse' AND is_active=True AND user.is_approved=True
+        active_nurses = Staff.objects.filter(
+            role_title__iregex=r'Nurse',
+            is_active=True,
+            user__is_approved=True
         ).count()
         
         # ===== REVENUE OVERVIEW =====
@@ -899,7 +922,7 @@ def reports_data(request):
         avg_invoice = Invoice.objects.aggregate(
             avg=Avg('total_amount')
         )['avg'] or 0
-        avg_invoice = float(avg_invoice)
+        avg_invoice = round(float(avg_invoice), 2)
         
         # ===== INVOICE STATUS =====
         # Pending: Count where is_approved IS NULL
@@ -915,9 +938,11 @@ def reports_data(request):
         unpaid_invoices_count = Invoice.objects.exclude(status='paid').count()
         
         # ===== DOCTOR PERFORMANCE =====
-        # Get all doctors
+        # Get all active, approved doctors
         doctors = Staff.objects.filter(
-            role_title__iregex=r'(Doctor|Dentist|Orthodontist)'
+            role_title__iregex=r'(Doctor|Dentist|Orthodontist)',
+            is_active=True,
+            user__is_approved=True
         ).select_related('user')
         
         doctor_stats = []
@@ -946,8 +971,34 @@ def reports_data(request):
                 'revenue': doctor_revenue
             })
         
-        # Sort by revenue descending
+        # ===== NURSE PERFORMANCE =====
+        # Get all active, approved nurses
+        nurses = Staff.objects.filter(
+            role_title__iregex=r'Nurse',
+            is_active=True,
+            user__is_approved=True
+        ).select_related('user')
+        
+        nurse_stats = []
+        for nurse in nurses:
+            # Nurse name
+            nurse_name = f"{nurse.first_name or ''} {nurse.last_name or ''}".strip()
+            if not nurse_name:
+                nurse_name = nurse.user.full_name if nurse.user else f"Nurse {nurse.staff_id}"
+            
+            # Visits: Count of ALL appointments where staff_id = nurse.staff_id (any status)
+            visits = Appointment.objects.filter(
+                staff=nurse
+            ).count()
+            
+            nurse_stats.append({
+                'name': nurse_name,
+                'visits': visits
+            })
+        
+        # Sort both by their respective metrics (doctors by revenue, nurses by visits)
         doctor_stats.sort(key=lambda x: x['revenue'], reverse=True)
+        nurse_stats.sort(key=lambda x: x['visits'], reverse=True)
         
         # Build response
         response_data = {
@@ -956,7 +1007,8 @@ def reports_data(request):
                 'paidInvoices': paid_invoices,
                 'unpaidInvoices': unpaid_invoices,
                 'totalVisits': total_visits,
-                'activeDoctors': active_doctors
+                'activeDoctors': active_doctors,
+                'activeNurses': active_nurses
             },
             'revenue': {
                 'today': today_revenue,
@@ -969,7 +1021,8 @@ def reports_data(request):
                 {'label': 'Paid', 'value': paid_invoices_count},
                 {'label': 'Unpaid', 'value': unpaid_invoices_count}
             ],
-            'doctorStats': doctor_stats
+            'doctorStats': doctor_stats,
+            'nurseStats': nurse_stats
         }
         
         return Response(response_data, status=status.HTTP_200_OK)
@@ -977,5 +1030,89 @@ def reports_data(request):
     except Exception as e:
         return Response(
             {'error': f'Reports error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def deactivate_staff(request, staff_id):
+    """
+    API endpoint to deactivate a staff member (set is_active=False in staff table)
+    """
+    try:
+        staff = Staff.objects.get(staff_id=staff_id)
+        staff.is_active = False
+        staff.save()
+        
+        return Response({'message': 'Staff member deactivated successfully'}, status=status.HTTP_200_OK)
+        
+    except Staff.DoesNotExist:
+        return Response(
+            {'error': 'Staff member not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Deactivate staff error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def activate_staff(request, staff_id):
+    """
+    API endpoint to activate a staff member (set is_active=True in staff table)
+    """
+    try:
+        staff = Staff.objects.get(staff_id=staff_id)
+        staff.is_active = True
+        staff.save()
+        
+        return Response({'message': 'Staff member activated successfully'}, status=status.HTTP_200_OK)
+        
+    except Staff.DoesNotExist:
+        return Response(
+            {'error': 'Staff member not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Activate staff error: {str(e)}'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def delete_staff(request, staff_id):
+    """
+    API endpoint to "delete" a staff member by deactivating them and removing their approvals
+    Sets is_active=False in staff table, is_verified=False and is_approved=False in user table
+    """
+    try:
+        staff = Staff.objects.get(staff_id=staff_id)
+        
+        # Deactivate in staff table
+        staff.is_active = False
+        staff.save()
+        
+        # Remove approvals in user table
+        if staff.user:
+            staff.user.is_verified = False
+            staff.user.is_approved = False
+            staff.user.save()
+        
+        return Response({'message': 'Staff member removed successfully'}, status=status.HTTP_200_OK)
+        
+    except Staff.DoesNotExist:
+        return Response(
+            {'error': 'Staff member not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Delete staff error: {str(e)}'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )

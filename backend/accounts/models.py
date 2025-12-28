@@ -30,6 +30,9 @@ class User(models.Model):
     password_hash = models.CharField(max_length=255)
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, blank=True, null=True)
     
+    # Approval status
+    is_approved = models.BooleanField(default=False)
+    
     # Doctor-specific fields
     medical_license_number = models.CharField(max_length=50, blank=True, null=True)
     is_verified = models.BooleanField(default=False)  # For doctor approval workflow

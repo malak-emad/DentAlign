@@ -138,11 +138,7 @@ export default function ClinicSession() {
             id: a.appointment_id,
             name: a.patient_name || 'Unknown Patient',
             time: formatTime(a),
-            nurse: a.nurse_name || '-',
-            services: (treatmentsMap[a.appointment_id] || [])
-              .map(t => t.description || t.treatment_code || 'Service')
-              .filter(s => s && s !== 'Service')
-              .join(', ') || 'Consultation',
+            services: a.reason || 'General Consultation',
             raw: a
           }));
 
@@ -152,9 +148,8 @@ export default function ClinicSession() {
             id: a.appointment_id,
             name: a.patient_name || 'Unknown Patient',
             time: formatTime(a),
-            nurse: a.nurse_name || '-',
             services: (treatmentsMap[a.appointment_id] || [])
-              .map(t => t.description || t.treatment_code || 'Service')
+              .map(t => t.service_name || t.description || 'Service')
               .filter(s => s && s !== 'Service')
               .join(', ') || 'No services recorded',
             raw: a
@@ -227,10 +222,6 @@ export default function ClinicSession() {
               type="action"
               onAction={startVisit}
             />
-            {/* Debug output */}
-            <pre style={{ background: '#f7f7f9', padding: 12, borderRadius: 8, marginTop: 12, maxHeight: 200, overflow: 'auto' }}>
-              {JSON.stringify(upcoming, null, 2)}
-            </pre>
           </div>
 
           <div className={styles.section}>
@@ -239,9 +230,6 @@ export default function ClinicSession() {
               patients={seenToday}
               type="view"
             />
-            <pre style={{ background: '#f7f7f9', padding: 12, borderRadius: 8, marginTop: 12, maxHeight: 200, overflow: 'auto' }}>
-              {JSON.stringify(seenToday, null, 2)}
-            </pre>
           </div>
         </div>
 

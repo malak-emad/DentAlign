@@ -11,7 +11,7 @@ export default function PatientsTable({ title, patients, type, onAction }) {
             <th>Patient</th>
             <th>Time</th>
             <th>Services</th>
-            <th>Nurse</th>
+            <th>Medical History</th>
             {type === "action" && <th>Action</th>}
           </tr>
         </thead>
@@ -21,7 +21,11 @@ export default function PatientsTable({ title, patients, type, onAction }) {
               <td>{p.name}</td>
               <td>{p.time}</td>
               <td>{p.services}</td>
-              <td>{p.nurse || "-"}</td>
+              <td>
+                <button className={styles.historyBtn}>
+                  Show Medical History
+                </button>
+              </td>
               {type === "action" && (
                 <td>
                   <button

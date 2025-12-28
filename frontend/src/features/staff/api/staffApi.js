@@ -68,6 +68,16 @@ export const staffApi = {
     }
   },
 
+  // Get staff reports
+  getReports: async () => {
+    try {
+      return await makeAuthenticatedRequest('/reports/');
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
+      throw error;
+    }
+  },
+
   // Update staff profile
   updateProfile: async (profileData) => {
     try {
@@ -429,6 +439,16 @@ export const staffApi = {
       });
     } catch (error) {
       console.error('Failed to delete past surgery:', error);
+      throw error;
+    }
+  },
+
+  // Reports APIs
+  getReports: async () => {
+    try {
+      return await makeAuthenticatedRequest('/reports/');
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
       throw error;
     }
   },

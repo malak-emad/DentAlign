@@ -12,6 +12,7 @@ export default function AdminReports() {
     unpaidInvoices: 0,
     totalVisits: 0,
     activeDoctors: 0,
+    activeNurses: 0,
   });
 
   const [revenue, setRevenue] = useState({
@@ -96,6 +97,7 @@ export default function AdminReports() {
         <MetricCard label="Unpaid Invoices" value={metrics.unpaidInvoices} />
         <MetricCard label="Total Visits" value={metrics.totalVisits} />
         <MetricCard label="Active Doctors" value={metrics.activeDoctors} />
+        <MetricCard label="Active Nurses" value={metrics.activeNurses} />
       </div>
 
       {/* ===== REVENUE ===== */}
@@ -156,7 +158,6 @@ export default function AdminReports() {
           <div className={styles.tableHeader}>
             <span>Nurse</span>
             <span>Visits</span>
-            <span>Revenue</span>
           </div>
 
           {nurseStats.length > 0 ? (
@@ -164,7 +165,6 @@ export default function AdminReports() {
               <div key={i} className={styles.tableRow}>
                 <span>{n.name}</span>
                 <span>{n.visits}</span>
-                <strong>{n.revenue} EGP</strong>
               </div>
             ))
           ) : (

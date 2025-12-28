@@ -89,6 +89,39 @@ class AdminApi {
     }
   }
 
+  async deactivateStaff(staffId) {
+    try {
+      return await makeAuthenticatedRequest(`/staff/${staffId}/deactivate/`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error deactivating staff:', error);
+      throw error;
+    }
+  }
+
+  async activateStaff(staffId) {
+    try {
+      return await makeAuthenticatedRequest(`/staff/${staffId}/activate/`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error activating staff:', error);
+      throw error;
+    }
+  }
+
+  async deleteStaff(staffId) {
+    try {
+      return await makeAuthenticatedRequest(`/staff/${staffId}/delete/`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Error deleting staff:', error);
+      throw error;
+    }
+  }
+
   async getUserApprovals() {
     try {
       return await makeAuthenticatedRequest('/user-approvals/');

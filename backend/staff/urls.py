@@ -10,6 +10,9 @@ urlpatterns = [
     # Staff profile
     path('profile/', views.staff_profile, name='staff_profile'),
     
+    # Staff reports
+    path('reports/', views.staff_reports, name='staff_reports'),
+    
     # Patient endpoints
     path('patients/', views.PatientListView.as_view(), name='patient_list'),
     path('patients/<uuid:patient_id>/', views.PatientDetailView.as_view(), name='patient_detail'),

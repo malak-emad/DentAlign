@@ -33,4 +33,8 @@ urlpatterns = [
     path('invoices/<str:invoice_id>/payment/', views.update_payment_status, name='update_payment_status'),
     # Reports
     path('reports/', views.reports_data, name='reports_data'),
+    # Staff management
+    path('staff/<str:staff_id>/deactivate/', views.deactivate_staff, name='deactivate_staff'),
+    path('staff/<str:staff_id>/activate/', views.activate_staff, name='activate_staff'),
+    path('staff/<str:staff_id>/delete/', views.delete_staff, name='delete_staff'),
 ]
