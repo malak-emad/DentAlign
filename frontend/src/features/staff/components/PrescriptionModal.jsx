@@ -50,6 +50,9 @@ export default function PrescriptionModal({ patient, duration, onClose }) {
         });
       }
 
+      // 1.5. Recalculate invoice total based on actual treatments
+      await staffApi.recalculateInvoiceTotal(patient.raw.appointment_id);
+
       // 2. Create medical record
       const medicalRecordData = {
         patient: patient.raw.patient,

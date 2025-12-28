@@ -45,6 +45,8 @@ urlpatterns = [
     
     # Invoice endpoints
     path('invoices/', views.InvoiceListView.as_view(), name='invoice_list'),
+    path('invoices/<uuid:invoice_id>/', views.InvoiceDetailView.as_view(), name='invoice_detail'),
+    path('appointments/<uuid:appointment_id>/recalculate-invoice/', views.recalculate_invoice_total, name='recalculate_invoice'),
     
     # Payment endpoints
     path('payments/', views.PaymentListView.as_view(), name='payment_list'),

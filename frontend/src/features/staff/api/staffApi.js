@@ -239,6 +239,39 @@ export const staffApi = {
     }
   },
 
+  getInvoiceByAppointment: async (appointmentId) => {
+    try {
+      const invoices = await makeAuthenticatedRequest(`/invoices/?appointment=${appointmentId}`);
+      return invoices.length > 0 ? invoices[0] : null;
+    } catch (error) {
+      console.error('Failed to fetch invoice by appointment:', error);
+      throw error;
+    }
+  },
+
+  updateInvoice: async (invoiceId, invoiceData) => {
+    try {
+      return await makeAuthenticatedRequest(`/invoices/${invoiceId}/`, {
+        method: 'PATCH',
+        body: JSON.stringify(invoiceData),
+      });
+    } catch (error) {
+      console.error('Failed to update invoice:', error);
+      throw error;
+    }
+  },
+
+  recalculateInvoiceTotal: async (appointmentId) => {
+    try {
+      return await makeAuthenticatedRequest(`/appointments/${appointmentId}/recalculate-invoice/`, {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.error('Failed to recalculate invoice total:', error);
+      throw error;
+    }
+  },
+
   // Payment APIs
   getPayments: async (filters = {}) => {
     const params = new URLSearchParams(filters);

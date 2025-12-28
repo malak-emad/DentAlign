@@ -554,12 +554,7 @@ def book_appointment(request):
             status='scheduled'
         )
         
-        # Create treatments for each service
-        for service in services:
-            Treatment.objects.create(
-                appointment=appointment,
-                service=service
-            )
+        # Note: Treatments are created during the prescription modal, not during booking
         
         # Calculate total amount
         total_amount = sum(float(service.price) for service in services)

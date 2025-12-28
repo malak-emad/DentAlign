@@ -240,16 +240,27 @@ class InvoiceListView(generics.ListCreateAPIView):
         queryset = super().get_queryset()
         status_filter = self.request.query_params.get('status', None)
         patient_id = self.request.query_params.get('patient_id', None)
+        appointment_id = self.request.query_params.get('appointment', None)
         overdue = self.request.query_params.get('overdue', None)
 
         if status_filter:
             queryset = queryset.filter(status=status_filter)
         if patient_id:
             queryset = queryset.filter(patient__patient_id=patient_id)
+        if appointment_id:
+            queryset = queryset.filter(appointment__appointment_id=appointment_id)
         if overdue == 'true':
             queryset = queryset.filter(due_date__lt=timezone.now().date(), status__in=['pending', 'partially_paid'])
 
         return queryset.order_by('-issued_date')
+
+
+class InvoiceDetailView(generics.RetrieveUpdateAPIView):
+    """Retrieve and update invoice details"""
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'invoice_id'
 
 
 class PaymentListView(generics.ListCreateAPIView):
@@ -420,3 +431,43 @@ def staff_profile(request):
             {'error': str(e)}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def recalculate_invoice_total(request, appointment_id):
+    """Recalculate the total amount for an invoice based on actual treatments performed"""
+    try:
+        # Get the appointment
+        appointment = Appointment.objects.get(appointment_id=appointment_id)
+        
+        # Get the invoice for this appointment
+        try:
+            invoice = Invoice.objects.get(appointment=appointment)
+        except Invoice.DoesNotExist:
+            return Response(
+                {'error': 'No invoice found for this appointment'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Calculate total from treatments
+        treatments = Treatment.objects.filter(appointment=appointment)
+        total_amount = sum(treatment.cost for treatment in treatments)
+        
+        # Update the invoice
+        invoice.total_amount = total_amount
+        invoice.save()
+        
+        return Response({
+            'message': 'Invoice total updated successfully',
+            'total_amount': float(total_amount),
+            'treatment_count': treatments.count()
+        }, status=status.HTTP_200_OK)
+        
+    except Appointment.DoesNotExist:
+        return Response(
+            {'error': 'Appointment not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
