@@ -98,6 +98,13 @@ class PatientDetailView(generics.RetrieveAPIView):
         return Response(data)
 
 
+class NursesListView(generics.ListAPIView):
+    """List active nurses for selection"""
+    queryset = Staff.objects.filter(role_title='Nurse')
+    serializer_class = StaffSerializer
+    permission_classes = [IsAuthenticated]
+
+
 class AppointmentListView(generics.ListAPIView):
     """List appointments for staff"""
     queryset = Appointment.objects.all()
@@ -137,10 +144,7 @@ class AppointmentListView(generics.ListAPIView):
         if start_time_gte:
             try:
                 start_datetime = datetime.fromisoformat(start_time_gte.replace('Z', '+00:00'))
-                queryset = queryset.filter(
-                    Q(start_time__gte=start_datetime) | 
-                    Q(appointment_date__gte=start_datetime, start_time__isnull=True)
-                )
+                queryset = queryset.filter(start_time__gte=start_datetime)
             except ValueError:
                 pass
 

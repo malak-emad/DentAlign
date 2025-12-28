@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, time
 from django.db.models import Q
 import json
 
-from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff, Service
+from staff.models import Patient, Appointment, Treatment, Invoice, MedicalRecord, Staff, Service, Service
 
 
 class IsPatientOnly:
@@ -81,7 +81,7 @@ def dashboard_stats(request):
         # Get pending invoices
         pending_invoices = Invoice.objects.filter(
             patient=patient,
-            status__in=['pending', 'overdue']
+            status__in=['unpaid', 'pending', 'overdue']
         )
         
         # Get recent treatments
@@ -111,7 +111,7 @@ def dashboard_stats(request):
             treatment = recent_treatments[0]
             latest_treatment = {
                 'treatment_id': str(treatment.treatment_id),
-                'treatment_code': treatment.treatment_code,
+                'treatment_type': treatment.service.name if treatment.service else 'Unknown',
                 'description': treatment.description,
                 'date': treatment.appointment.start_time.strftime('%Y-%m-%d') if treatment.appointment else None,
                 'cost': float(treatment.cost) if treatment.cost else 0
@@ -142,7 +142,7 @@ def dashboard_stats(request):
             'recent_appointments': [
                 {
                     'appointment_id': str(apt.appointment_id),
-                    'date': apt.appointment_date.strftime('%Y-%m-%d'),
+                    'date': apt.appointment_date.strftime('%Y-%m-%d') if apt.appointment_date else (apt.start_time.strftime('%Y-%m-%d') if apt.start_time else 'TBD'),
                     'time': apt.start_time.strftime('%I:%M %p') if apt.start_time else 'Time TBD',
                     'status': apt.status,
                     'reason': apt.reason or 'General Consultation'
@@ -275,10 +275,21 @@ STAFF_SERVICES = {
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([])
 def available_services(request):
     """Get list of available services"""
-    return Response({'services': AVAILABLE_SERVICES}, status=status.HTTP_200_OK)
+    services = Service.objects.filter(is_active=True).order_by('name')
+    services_data = [
+        {
+            'id': str(service.service_id),
+            'title': service.name,
+            'subtitle': service.description or f'Standard {service.name.lower()} service',
+            'duration_mins': 30,  # Default duration, can be customized later
+            'price': float(service.price)
+        }
+        for service in services
+    ]
+    return Response({'services': services_data}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -459,13 +470,20 @@ def book_appointment(request):
         data = request.data
         
         # Validate required fields
-        required_fields = ['doctor_id', 'date', 'time', 'service']
+        required_fields = ['doctor_id', 'date', 'time', 'service_ids']
         for field in required_fields:
             if field not in data:
                 return Response(
                     {'error': f'{field} is required'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        
+        service_ids = data['service_ids']
+        if not isinstance(service_ids, list) or len(service_ids) == 0:
+            return Response(
+                {'error': 'service_ids must be a non-empty list'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Get and validate staff
         try:
@@ -507,9 +525,20 @@ def book_appointment(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Find service duration
-        service_info = next((s for s in AVAILABLE_SERVICES if s['id'] == data['service']), None)
-        duration_mins = service_info['duration_mins'] if service_info else 30
+        # Get and validate services
+        services = []
+        for service_id in service_ids:
+            try:
+                service = Service.objects.get(service_id=service_id, is_active=True)
+                services.append(service)
+            except Service.DoesNotExist:
+                return Response(
+                    {'error': f'Service {service_id} not found or not available'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
+        # Use service duration (default to 30 mins if not specified)
+        duration_mins = 30  # Can be added to Service model later
         
         # Calculate end time
         end_datetime = start_datetime + timedelta(minutes=duration_mins)
@@ -520,8 +549,31 @@ def book_appointment(request):
             staff=staff,
             start_time=start_datetime,
             end_time=end_datetime,
-            reason=data.get('reason', service_info['title'] if service_info else 'General Consultation'),
+            appointment_date=start_datetime,  # Save the appointment time in both fields
+            reason=data.get('reason', ', '.join(s.name for s in services)),
             status='scheduled'
+        )
+        
+        # Create treatments for each service
+        for service in services:
+            Treatment.objects.create(
+                appointment=appointment,
+                service=service
+            )
+        
+        # Calculate total amount
+        total_amount = sum(float(service.price) for service in services)
+        
+        # Create invoice
+        Invoice.objects.create(
+            patient=patient,
+            appointment=appointment,
+            total_amount=total_amount,
+            paid_amount=0,
+            status='unpaid',
+            issued_date=timezone.now().date(),
+            due_date=timezone.now().date() + timedelta(days=30),
+            is_approved=False
         )
         
         # Return appointment details
@@ -530,7 +582,7 @@ def book_appointment(request):
             'doctor_name': f"Dr. {staff.first_name or ''} {staff.last_name or ''}".strip() or f"Dr. {staff.user.full_name}",
             'date': appointment.start_time.strftime('%Y-%m-%d'),
             'time': appointment.start_time.strftime('%H:%M'),
-            'service': service_info['title'] if service_info else data['service'],
+            'services': [s.name for s in services],
             'status': appointment.status,
             'reason': appointment.reason
         }

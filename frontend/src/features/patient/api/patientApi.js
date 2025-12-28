@@ -7,6 +7,26 @@ const getAuthToken = () => {
   return token ? `Token ${token}` : null;
 };
 
+// Helper function to make public requests (no auth)
+const makePublicRequest = async (url, options = {}) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
+
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || errorData.error || `HTTP ${response.status}`);
+  }
+
+  return response.json();
+};
+
 // Helper function to make authenticated requests
 const makeAuthenticatedRequest = async (url, options = {}) => {
   const token = getAuthToken();
@@ -104,7 +124,9 @@ export const patientApi = {
   // Get available services for booking
   getAvailableServices: async () => {
     try {
-      return await makeAuthenticatedRequest('/services/');
+      const response = await makePublicRequest('/services/');
+      const servicesList = Array.isArray(response.services) ? response.services : [];
+      return servicesList;
     } catch (error) {
       console.error('Failed to fetch services:', error);
       throw error;

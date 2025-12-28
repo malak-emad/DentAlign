@@ -3,6 +3,9 @@ from django.utils import timezone
 from accounts.models import User
 import uuid
 
+def default_record_date():
+    return timezone.now().date()
+
 # Staff models for the dental practice management system
 # These models map to existing tables in the Neon database
 
@@ -59,6 +62,43 @@ class Staff(models.Model):
         return f"{self.user.full_name} - {self.role_title or 'Staff'}"
 
 
+class MedicalRecord(models.Model):
+    """Model mapping to existing medical_records table"""
+    record_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='medical_records')
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='medical_records', db_column='staff')
+    appointment = models.ForeignKey('Appointment', on_delete=models.CASCADE, blank=True, null=True)
+    record_date = models.DateField(default=default_record_date)
+    chief_complaint = models.TextField(blank=True, null=True, db_column='chief_complaint')
+    examination_notes = models.TextField(blank=True, null=True)
+    diagnosis_notes = models.TextField(blank=True, null=True)
+    treatment_plan = models.TextField(blank=True, null=True)
+    medications = models.TextField(blank=True, null=True)
+    follow_up_instructions = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Additional fields for enhanced functionality
+    radiology_needed = models.BooleanField(default=False)
+    outcome = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='created_records', db_column='created_by', blank=True, null=True)
+
+    class Meta:
+        db_table = 'medical_records'
+
+    def __str__(self):
+        return f"Record for {self.patient.full_name} - {self.record_date}"
+
+    @property
+    def notes(self):
+        """Alias for chief_complaint for backwards compatibility"""
+        return self.chief_complaint
+
+    @property
+    def patient_name(self):
+        return self.patient.full_name
+
+
 class Appointment(models.Model):
     """Model mapping to existing appointments table"""
     STATUS_CHOICES = [
@@ -96,21 +136,6 @@ class Appointment(models.Model):
     def appointment_time(self):
         """Return the time part of start_time for backwards compatibility"""
         return self.start_time.time()
-
-
-class MedicalRecord(models.Model):
-    """Model mapping to existing medical_records table"""
-    record_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='medical_records', db_column='patient_id')
-    created_by = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='created_medical_records', db_column='created_by')
-    created_at = models.DateTimeField(default=timezone.now)
-    notes = models.TextField(blank=True, null=True)
-
-    class Meta:
-        db_table = 'medical_records'
-
-    def __str__(self):
-        return f"Record for {self.patient.full_name} - {self.created_at}"
 
 
 class Treatment(models.Model):
@@ -155,7 +180,7 @@ class Treatment(models.Model):
 class Diagnosis(models.Model):
     """Model mapping to existing diagnoses table"""
     diagnosis_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    record = models.ForeignKey(MedicalRecord, on_delete=models.CASCADE, related_name='diagnoses')
+    record = models.ForeignKey('MedicalRecord', on_delete=models.CASCADE, related_name='diagnoses')
     icd10_code = models.CharField(max_length=20, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     diagnosed_at = models.DateTimeField(default=timezone.now)

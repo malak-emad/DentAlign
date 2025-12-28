@@ -3,27 +3,41 @@ import React, { useMemo, useState, useEffect } from "react";
 import styles from "./Booking.module.css";
 import { patientApi } from "../api/patientApi";
 
-const SERVICES = [
-  { id: "orthodontics", title: "Orthodontics", subtitle: "Braces, aligners & adjustments", duration_mins: 30 },
-  { id: "cleaning", title: "Dental Cleaning", subtitle: "Scale & polish", duration_mins: 45 },
-  { id: "consultation", title: "Consultation", subtitle: "New patient consult / exam", duration_mins: 20 },
-  { id: "root_canal", title: "Root Canal", subtitle: "Endodontic treatment", duration_mins: 60 },
-  { id: "radiology", title: "Radiology (X‑Ray)", subtitle: "In‑house imaging", duration_mins: 15 },
-];
-
 export default function Booking() {
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedServices, setSelectedServices] = useState([]);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [date, setDate] = useState("");
   const [slot, setSlot] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [bookingData, setBookingData] = useState(null);
 
+  const [services, setServices] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
   const [doctorsLoading, setDoctorsLoading] = useState(false);
   const [bookingInProgress, setBookingInProgress] = useState(false);
   const [error, setError] = useState(null);
+
+  const totalCost = selectedServices.reduce((sum, s) => sum + parseFloat(s.price || 0), 0);
+
+  /* ---------------- Fetch services ---------------- */
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setServicesLoading(true);
+        const response = await patientApi.getAvailableServices();
+        setServices(response || []);
+      } catch (err) {
+        console.error('Error fetching services:', err);
+        setError("Failed to load services");
+      } finally {
+        setServicesLoading(false);
+      }
+    };
+
+    fetchServices();
+  }, []);
 
   /* ---------------- Fetch doctors ---------------- */
   useEffect(() => {
@@ -68,7 +82,7 @@ export default function Booking() {
   }, [selectedDoctor, date]);
 
   function resetBooking() {
-    setSelectedService(null);
+    setSelectedServices([]);
     setSelectedDoctor(null);
     setDate("");
     setSlot("");
@@ -78,7 +92,7 @@ export default function Booking() {
   }
 
   const handleConfirm = async () => {
-    if (!selectedService || !selectedDoctor || !date || !slot) {
+    if (selectedServices.length === 0 || !selectedDoctor || !date || !slot) {
       setError("Please complete all fields");
       return;
     }
@@ -86,19 +100,21 @@ export default function Booking() {
     try {
       setBookingInProgress(true);
 
-      await patientApi.bookAppointment({
-        service: selectedService.id,
+      const response = await patientApi.bookAppointment({
+        service_ids: selectedServices.map(s => s.id),
         doctor_id: selectedDoctor.id,
         date,
         time: slot,
-        reason: selectedService.title,
+        reason: selectedServices.map(s => s.title).join(', '),
       });
 
       setBookingData({
-        service: selectedService.title,
-        doctor: selectedDoctor.name,
-        date,
-        time: slot,
+        service: response.appointment.services.join(', '),
+        doctor: response.appointment.doctor_name,
+        date: response.appointment.date,
+        time: response.appointment.time,
+        totalCost,
+        message: response.message,
       });
 
       setConfirmed(true);
@@ -129,24 +145,35 @@ export default function Booking() {
         <section className={styles.left}>
           {/* 1. Service */}
           <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>1. Choose service</h2>
-            <div className={styles.servicesGrid}>
-              {SERVICES.map((s) => (
-                <button
-                  key={s.id}
-                  className={`${styles.serviceCard} ${
-                    selectedService?.id === s.id ? styles.selectedCard : ""
-                  }`}
-                  onClick={() => setSelectedService(s)}
-                >
-                  <div className={styles.serviceTitle}>{s.title}</div>
-                  <div className={styles.serviceSubtitle}>{s.subtitle}</div>
-                  <div className={styles.serviceDuration}>
-                    {s.duration_mins} min
+            <h2 className={styles.sectionTitle}>1. Choose services</h2>
+            {servicesLoading ? (
+              <p>Loading services...</p>
+            ) : (
+              <div className={styles.servicesGrid}>
+                {services.map((s) => (
+                  <div
+                    key={s.id}
+                    className={`${styles.serviceCard} ${selectedServices.some(sel => sel.id === s.id) ? styles.selectedCard : ""}`}
+                    onClick={() => {
+                      if (selectedServices.some(sel => sel.id === s.id)) {
+                        setSelectedServices(selectedServices.filter(sel => sel.id !== s.id));
+                      } else {
+                        setSelectedServices([...selectedServices, s]);
+                      }
+                    }}
+                  >
+                    <div className={styles.serviceTitle}>{s.title}</div>
+                    <div className={styles.serviceSubtitle}>{s.subtitle}</div>
+                    <div className={styles.serviceDuration}>
+                      {s.duration_mins} min
+                    </div>
+                    <div className={styles.servicePrice}>
+                      ${parseFloat(s.price).toFixed(2)}
+                    </div>
                   </div>
-                </button>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 2. Doctor */}
@@ -224,7 +251,7 @@ export default function Booking() {
 
             <div className={styles.summaryRow}>
               <span>Service</span>
-              <strong>{selectedService?.title || "—"}</strong>
+              <strong>{selectedServices.length > 0 ? selectedServices.map(s => s.title).join(', ') : "—"}</strong>
             </div>
             <div className={styles.summaryRow}>
               <span>Doctor</span>
@@ -238,13 +265,17 @@ export default function Booking() {
               <span>Time</span>
               <strong>{slot || "—"}</strong>
             </div>
+            <div className={styles.summaryRow}>
+              <span>Total Cost</span>
+              <strong>${totalCost.toFixed(2)}</strong>
+            </div>
 
             <div className={styles.controls}>
               <button
                 className={styles.confirmBtn}
                 onClick={handleConfirm}
                 disabled={
-                  !(selectedService && selectedDoctor && date && slot) ||
+                  selectedServices.length === 0 || !selectedDoctor || !date || !slot ||
                   bookingInProgress
                 }
               >
@@ -258,12 +289,13 @@ export default function Booking() {
 
             {confirmed && bookingData && (
               <div className={styles.toast}>
-                <strong>Confirmed!</strong>
+                <strong>{bookingData.message}</strong>
                 <div>Service: {bookingData.service}</div>
                 <div>Doctor: {bookingData.doctor}</div>
                 <div>
                   Date: {bookingData.date} at {bookingData.time}
                 </div>
+                <div>Total: ${bookingData.totalCost.toFixed(2)}</div>
               </div>
             )}
           </div>

@@ -1,13 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./PrescriptionModal.module.css";
 import ServiceSelector from "./ServiceSelector";
 import { staffApi } from "../api/staffApi";
 
 export default function PrescriptionModal({ patient, duration, onClose }) {
   const [notes, setNotes] = useState("");
-  const [radiology, setRadiology] = useState("no");
+  const [outcome, setOutcome] = useState("");
+  const [radiologyNeeded, setRadiologyNeeded] = useState(false);
+  const [selectedNurse, setSelectedNurse] = useState("");
   const [medications, setMedications] = useState([""]);
   const [selectedServices, setSelectedServices] = useState([]);
+  const [nurses, setNurses] = useState([]);
+
+  useEffect(() => {
+    const fetchNurses = async () => {
+      try {
+        const nursesData = await staffApi.getNurses();
+        setNurses(nursesData.results || nursesData); // Handle paginated response
+      } catch (error) {
+        console.error('Failed to fetch nurses:', error);
+        setNurses([]); // Set empty array on error
+      }
+    };
+    fetchNurses();
+  }, []);
 
   const addMedication = () => {
     setMedications((prev) => [...prev, ""]);
@@ -35,15 +51,24 @@ export default function PrescriptionModal({ patient, duration, onClose }) {
       }
 
       // 2. Create medical record
-      const medicalRecord = await staffApi.createMedicalRecord({
+      const medicalRecordData = {
         patient: patient.raw.patient,
+        staff: patient.raw.staff,
         created_by: patient.raw.staff,
+        appointment: patient.raw.appointment_id,
         notes: notes,
-      });
+        radiology_needed: radiologyNeeded,
+        outcome: outcome,
+      };
+      
+      console.log('Creating medical record with data:', medicalRecordData);
+      
+      const medicalRecord = await staffApi.createMedicalRecord(medicalRecordData);
 
-      // 3. Update appointment to link the medical record
+      // 3. Update appointment to link the medical record and nurse
       await staffApi.updateAppointment(patient.raw.appointment_id, {
         medical_record: medicalRecord.record_id,
+        nurse: selectedNurse || null,
       });
 
       // 4. Create diagnoses for medications
@@ -108,38 +133,53 @@ export default function PrescriptionModal({ patient, duration, onClose }) {
 
         {/* RADIOLOGY */}
         <div className={styles.section}>
-          <h4>Radiology / X‑Ray</h4>
+          <h4>Radiology Required?</h4>
+          <label>
+            <input
+              type="checkbox"
+              checked={radiologyNeeded}
+              onChange={(e) => setRadiologyNeeded(e.target.checked)}
+            />
+            Radiology / X-Ray required
+          </label>
+        </div>
 
-          <div className={styles.radioGroup}>
-            <label>
-              <input
-                type="radio"
-                name="radiology"
-                checked={radiology === "no"}
-                onChange={() => setRadiology("no")}
-              />
-              Not required
-            </label>
-
-            <label>
-              <input
-                type="radio"
-                name="radiology"
-                checked={radiology === "yes"}
-                onChange={() => setRadiology("yes")}
-              />
-              Required
-            </label>
-          </div>
+        {/* NURSE */}
+        <div className={styles.section}>
+          <h4>Assisting Nurse</h4>
+          <select
+            value={selectedNurse}
+            onChange={(e) => setSelectedNurse(e.target.value)}
+            className={styles.input}
+          >
+            <option value="">Select Nurse (Optional)</option>
+            {Array.isArray(nurses) && nurses.map((nurse) => (
+              <option key={nurse.staff_id} value={nurse.staff_id}>
+                {nurse.first_name} {nurse.last_name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* NOTES */}
         <div className={styles.section}>
-          <h4>Doctor Notes</h4>
+          <h4>Doctor Diagnosis and Notes</h4>
           <textarea
-            placeholder="Additional notes or instructions..."
+            placeholder="Diagnosis and additional notes..."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
+            className={styles.textarea}
+          />
+        </div>
+
+        {/* OUTCOME */}
+        <div className={styles.section}>
+          <h4>Outcome</h4>
+          <textarea
+            placeholder="Treatment outcome and follow-up instructions..."
+            value={outcome}
+            onChange={(e) => setOutcome(e.target.value)}
+            className={styles.textarea}
           />
         </div>
 

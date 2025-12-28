@@ -139,12 +139,12 @@ export const staffApi = {
     }
   },
 
-  // Get current staff profile
-  getProfile: async () => {
+  // Get nurses list
+  getNurses: async () => {
     try {
-      return await makeAuthenticatedRequest('/profile/');
+      return await makeAuthenticatedRequest('/nurses/');
     } catch (error) {
-      console.error('Failed to fetch staff profile:', error);
+      console.error('Failed to fetch nurses:', error);
       throw error;
     }
   },

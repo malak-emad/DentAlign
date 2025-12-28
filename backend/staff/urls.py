@@ -15,6 +15,9 @@ urlpatterns = [
     path('patients/<uuid:patient_id>/', views.PatientDetailView.as_view(), name='patient_detail'),
     path('patients/search/', views.patient_search, name='patient_search'),
     
+    # Nurses
+    path('nurses/', views.NursesListView.as_view(), name='nurses_list'),
+    
     # Appointment endpoints
     path('appointments/', views.AppointmentListView.as_view(), name='appointment_list'),
     path('appointments/<uuid:appointment_id>/', views.AppointmentDetailView.as_view(), name='appointment_detail'),
