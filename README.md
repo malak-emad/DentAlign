@@ -211,8 +211,4 @@ http://localhost:5173/
 - Responsive web interface
 - Dashboard analytics and reporting
 
----
 
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
